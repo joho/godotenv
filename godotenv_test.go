@@ -63,4 +63,8 @@ func TestParsing(t *testing.T) {
 
 	// parses escaped double quotes
 	parseAndCompare(t, "FOO=escaped\\\"bar\"", "FOO", "escaped\"bar")
+
+	// parses yaml style options
+	parseAndCompare(t, "OPTION_A: 1", "OPTION_A", "1")
+
 }

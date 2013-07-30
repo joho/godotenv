@@ -60,6 +60,16 @@ func parseLine(line string) (key string, value string, err error) {
 
 	splitString := strings.Split(line, "=")
 
+	if len(splitString) != 2 {
+		// try yaml mode!
+		splitString = strings.Split(line, ":")
+	}
+
+	if len(splitString) != 2 {
+		err = errors.New("Can't separate key from value")
+		return
+	}
+
 	key = strings.Trim(splitString[0], " ")
 
 	value = strings.Trim(splitString[1], " \"'")
