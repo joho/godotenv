@@ -5,6 +5,13 @@ import (
 	"testing"
 )
 
+func TestLoadFileNotFound(t *testing.T) {
+	err := Load("somefilethatwillneverexistever.env")
+	if err == nil {
+		t.Error("File wasn't found but Load didn't return an error")
+	}
+}
+
 func TestLoadPlainEnv(t *testing.T) {
 	envFileName := "fixtures/plain.env"
 	err := Load(envFileName)
