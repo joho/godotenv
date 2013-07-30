@@ -5,6 +5,13 @@ import (
 	"testing"
 )
 
+func parseAndCompare(t *testing.T, rawEnvLine string, expectedKey string, expectedValue string) {
+	key, value, _ := parseLine(rawEnvLine)
+	if key != expectedKey || value != expectedValue {
+		t.Errorf("Expected '%v' to parse as '%v' => '%v', got '%v' => '%v' instead", rawEnvLine, expectedKey, expectedValue, key, value)
+	}
+}
+
 func loadEnvAndCompareValues(t *testing.T, envFileName string, expectedValues map[string]string) {
 	err := Load(envFileName)
 	if err != nil {
@@ -38,4 +45,9 @@ func TestLoadPlainEnv(t *testing.T) {
 	}
 
 	loadEnvAndCompareValues(t, envFileName, plainValues)
+}
+
+func TestParsing(t *testing.T) {
+	// unquoted values
+	parseAndCompare(t, "FOO=bar", "FOO", "bar")
 }
