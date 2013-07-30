@@ -50,4 +50,17 @@ func TestLoadPlainEnv(t *testing.T) {
 func TestParsing(t *testing.T) {
 	// unquoted values
 	parseAndCompare(t, "FOO=bar", "FOO", "bar")
+
+	// parses values with spaces around equal sign
+	parseAndCompare(t, "FOO =bar", "FOO", "bar")
+	parseAndCompare(t, "FOO= bar", "FOO", "bar")
+
+	// parses double quoted values
+	parseAndCompare(t, "FOO=\"bar\"", "FOO", "bar")
+
+	// parses single quoted values
+	parseAndCompare(t, "FOO='bar'", "FOO", "bar")
+
+	// parses escaped double quotes
+	parseAndCompare(t, "FOO=escaped\\\"bar\"", "FOO", "escaped\"bar")
 }
