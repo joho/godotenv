@@ -70,7 +70,11 @@ func parseLine(line string) (key string, value string, err error) {
 		return
 	}
 
-	key = strings.Trim(splitString[0], " ")
+	key = splitString[0]
+	if strings.HasPrefix(key, "export") {
+		key = strings.TrimPrefix(key, "export")
+	}
+	key = strings.Trim(key, " ")
 
 	value = strings.Trim(splitString[1], " \"'")
 	value = strings.Replace(value, "\\\"", "\"", -1)

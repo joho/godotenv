@@ -67,4 +67,7 @@ func TestParsing(t *testing.T) {
 	// parses yaml style options
 	parseAndCompare(t, "OPTION_A: 1", "OPTION_A", "1")
 
+	// parses export keyword
+	parseAndCompare(t, "export OPTION_A=2", "OPTION_A", "2")
+
 }
