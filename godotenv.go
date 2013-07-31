@@ -3,6 +3,7 @@ package godotenv
 import (
 	"bufio"
 	"errors"
+	"io"
 	"os"
 	"strings"
 )
@@ -23,9 +24,23 @@ func loadFile(filename string) (err error) {
 		return
 	}
 
-	bufferSize := 20
-	lines := make([]string, bufferSize)
-	lineReader := bufio.NewReaderSize(file, bufferSize)
+	lines := readRawLines(file)
+
+	for _, fullLine := range lines {
+		if !isIgnoredLine(fullLine) {
+			key, value, err := parseLine(fullLine)
+
+			if err == nil {
+				os.Setenv(key, value)
+			}
+		}
+	}
+
+	return
+}
+
+func readRawLines(file io.Reader) (lines []string) {
+	lineReader := bufio.NewReader(file)
 	for line, isPrefix, e := lineReader.ReadLine(); e == nil; line, isPrefix, e = lineReader.ReadLine() {
 		fullLine := string(line)
 		if isPrefix {
@@ -40,19 +55,6 @@ func loadFile(filename string) (err error) {
 		// add a line to the game/parse
 		lines = append(lines, string(line))
 	}
-
-	for _, fullLine := range lines {
-		// fmt.Printf("Line: %v\n", fullLine)
-		if !isIgnoredLine(fullLine) {
-			key, value, err := parseLine(fullLine)
-			// fmt.Printf("Key: %v Value: %v\n", key, value)
-
-			if err == nil {
-				os.Setenv(key, value)
-			}
-		}
-	}
-
 	return
 }
 
@@ -62,29 +64,9 @@ func parseLine(line string) (key string, value string, err error) {
 		return
 	}
 
-	splitString := strings.Split(line, "=")
-
-	if len(splitString) != 2 {
-		// try yaml mode!
-		splitString = strings.Split(line, ":")
-	}
-
-	if len(splitString) != 2 {
-		err = errors.New("Can't separate key from value")
-		return
-	}
-
-	key = splitString[0]
-	if strings.HasPrefix(key, "export") {
-		key = strings.TrimPrefix(key, "export")
-	}
-	key = strings.Trim(key, " ")
-
-	value = splitString[1]
-
 	// ditch the comments (but keep quoted hashes)
-	if strings.Contains(value, "#") {
-		segmentsBetweenHashes := strings.Split(value, "#")
+	if strings.Contains(line, "#") {
+		segmentsBetweenHashes := strings.Split(line, "#")
 		quotesAreOpen := false
 		segmentsToKeep := make([]string, 0)
 		for _, segment := range segmentsBetweenHashes {
@@ -102,21 +84,44 @@ func parseLine(line string) (key string, value string, err error) {
 			}
 		}
 
-		value = strings.Join(segmentsToKeep, "#")
+		line = strings.Join(segmentsToKeep, "#")
 	}
+
+	// now split key from value
+	splitString := strings.Split(line, "=")
+
+	if len(splitString) != 2 {
+		// try yaml mode!
+		splitString = strings.Split(line, ":")
+	}
+
+	if len(splitString) != 2 {
+		err = errors.New("Can't separate key from value")
+		return
+	}
+
+	// Parse the key
+	key = splitString[0]
+	if strings.HasPrefix(key, "export") {
+		key = strings.TrimPrefix(key, "export")
+	}
+	key = strings.Trim(key, " ")
+
+	// Parse the value
+	value = splitString[1]
+	// trim
+	value = strings.Trim(value, " ")
 
 	// check if we've got quoted values
 	if strings.Count(value, "\"") == 2 || strings.Count(value, "'") == 2 {
 		// pull the quotes off the edges
-		value = strings.Trim(value, "\"' ")
+		value = strings.Trim(value, "\"'")
 
 		// expand quotes
 		value = strings.Replace(value, "\\\"", "\"", -1)
 		// expand newlines
 		value = strings.Replace(value, "\\n", "\n", -1)
 	}
-	// trim
-	value = strings.Trim(value, " ")
 
 	return
 }

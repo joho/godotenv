@@ -98,7 +98,7 @@ func TestParsing(t *testing.T) {
 
 	// parses export keyword
 	parseAndCompare(t, "export OPTION_A=2", "OPTION_A", "2")
-	parseAndCompare(t, "export OPTION_B='\n'", "OPTION_B", "\n")
+	parseAndCompare(t, "export OPTION_B='\\n'", "OPTION_B", "\n")
 
 	// it 'expands newlines in quoted strings' do
 	// expect(env('FOO="bar\nbaz"')).to eql('FOO' => "bar\nbaz")
@@ -158,4 +158,8 @@ func TestLinesToIgnore(t *testing.T) {
 		t.Error("Indented comment wasn't ignored")
 	}
 
+	// make sure we're not getting false positives
+	if isIgnoredLine("export OPTION_B='\\n'") {
+		t.Error("ignoring a perfectly valid line to parse")
+	}
 }
