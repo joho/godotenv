@@ -42,10 +42,12 @@ func loadFile(filename string) (err error) {
 	}
 
 	for _, fullLine := range lines {
-		key, value, err := parseLine(fullLine)
+		if !isIgnoredLine(fullLine) {
+			key, value, err := parseLine(fullLine)
 
-		if err == nil {
-			os.Setenv(key, value)
+			if err == nil {
+				os.Setenv(key, value)
+			}
 		}
 	}
 
@@ -115,4 +117,9 @@ func parseLine(line string) (key string, value string, err error) {
 	value = strings.Trim(value, " ")
 
 	return
+}
+
+func isIgnoredLine(line string) bool {
+	trimmedLine := strings.Trim(line, " \n\t")
+	return len(trimmedLine) == 0 || strings.HasPrefix(trimmedLine, "#")
 }

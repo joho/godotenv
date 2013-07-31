@@ -92,9 +92,6 @@ func TestParsing(t *testing.T) {
 	parseAndCompare(t, "FOO='bar#baz' # comment", "FOO", "bar#baz")
 	parseAndCompare(t, "FOO=\"bar#baz#bang\" # comment", "FOO", "bar#baz#bang")
 
-	// it 'ignores comment lines' do
-	// expect(env("\n\n\n # HERE GOES FOO \nfoo=bar")).to eql('foo' => 'bar')
-
 	// it 'parses # in quoted values' do
 	// expect(env('foo="ba#r"')).to eql('foo' => 'ba#r')
 	// expect(env("foo='ba#r'")).to eql('foo' => 'ba#r')
@@ -108,7 +105,27 @@ func TestParsing(t *testing.T) {
 	if err == nil {
 		t.Errorf("Expected \"%v\" to return error, but it didn't", badlyFormattedLine)
 	}
+}
 
+func TestLinesToIgnore(t *testing.T) {
 	// it 'ignores empty lines' do
 	// expect(env("\n \t  \nfoo=bar\n \nfizz=buzz")).to eql('foo' => 'bar', 'fizz' => 'buzz')
+	if !isIgnoredLine("\n") {
+		t.Error("Line with nothing but line break wasn't ignored")
+	}
+
+	if !isIgnoredLine("\t\t ") {
+		t.Error("Line full of whitespace wasn't ignored")
+	}
+
+	// it 'ignores comment lines' do
+	// expect(env("\n\n\n # HERE GOES FOO \nfoo=bar")).to eql('foo' => 'bar')
+	if !isIgnoredLine("# comment") {
+		t.Error("Comment wasn't ignored")
+	}
+
+	if !isIgnoredLine("\t#comment") {
+		t.Error("Indented comment wasn't ignored")
+	}
+
 }
