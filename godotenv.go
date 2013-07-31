@@ -9,6 +9,10 @@ import (
 )
 
 func Load(filenames ...string) (err error) {
+	if len(filenames) == 0 {
+		filenames = []string{".env"}
+	}
+
 	for _, filename := range filenames {
 		err = loadFile(filename)
 		if err != nil {
