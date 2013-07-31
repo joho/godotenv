@@ -83,7 +83,7 @@ func parseLine(line string) (key string, value string, err error) {
 		segmentsBetweenHashes := strings.Split(value, "#")
 		value = segmentsBetweenHashes[0]
 		// open quote in leftmost segment
-		if strings.Count(value, "\"") == 1 {
+		if strings.Count(value, "\"") == 1 || strings.Count(value, "'") == 1 {
 			value = value + "#" + segmentsBetweenHashes[1]
 		}
 	}
