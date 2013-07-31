@@ -98,9 +98,16 @@ func TestParsing(t *testing.T) {
 	// it 'parses # in quoted values' do
 	// expect(env('foo="ba#r"')).to eql('foo' => 'ba#r')
 	// expect(env("foo='ba#r'")).to eql('foo' => 'ba#r')
+	parseAndCompare(t, "FOO=\"ba#r\"", "FOO", "ba#r")
+	parseAndCompare(t, "FOO='ba#r'", "FOO", "ba#r")
 
 	// it 'throws an error if line format is incorrect' do
 	// expect{env('lol$wut')}.to raise_error(Dotenv::FormatError)
+	badlyFormattedLine := "lol$wut"
+	_, _, err := parseLine(badlyFormattedLine)
+	if err == nil {
+		t.Errorf("Expected \"%v\" to return error, but it didn't", badlyFormattedLine)
+	}
 
 	// it 'ignores empty lines' do
 	// expect(env("\n \t  \nfoo=bar\n \nfizz=buzz")).to eql('foo' => 'bar', 'fizz' => 'buzz')
