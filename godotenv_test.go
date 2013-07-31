@@ -13,6 +13,9 @@ func parseAndCompare(t *testing.T, rawEnvLine string, expectedKey string, expect
 }
 
 func loadEnvAndCompareValues(t *testing.T, envFileName string, expectedValues map[string]string) {
+	// first up, clear the env
+	os.Clearenv()
+
 	err := Load(envFileName)
 	if err != nil {
 		t.Fatalf("Error loading %v", envFileName)
@@ -36,7 +39,7 @@ func TestLoadFileNotFound(t *testing.T) {
 
 func TestLoadPlainEnv(t *testing.T) {
 	envFileName := "fixtures/plain.env"
-	plainValues := map[string]string{
+	expectedValues := map[string]string{
 		"OPTION_A": "1",
 		"OPTION_B": "2",
 		"OPTION_C": "3",
@@ -44,7 +47,33 @@ func TestLoadPlainEnv(t *testing.T) {
 		"OPTION_E": "5",
 	}
 
-	loadEnvAndCompareValues(t, envFileName, plainValues)
+	loadEnvAndCompareValues(t, envFileName, expectedValues)
+}
+
+func TestLoadExportedEnv(t *testing.T) {
+	envFileName := "fixtures/exported.env"
+	expectedValues := map[string]string{
+		"OPTION_A": "2",
+		"OPTION_B": "\n",
+	}
+
+	loadEnvAndCompareValues(t, envFileName, expectedValues)
+}
+
+func TestLoadQuotedEnv(t *testing.T) {
+	envFileName := "fixtures/quoted.env"
+	expectedValues := map[string]string{
+		"OPTION_A": "1",
+		"OPTION_B": "2",
+		"OPTION_C": "",
+		"OPTION_D": "\n",
+		"OPTION_E": "1",
+		"OPTION_F": "2",
+		"OPTION_G": "",
+		"OPTION_H": "\n",
+	}
+
+	loadEnvAndCompareValues(t, envFileName, expectedValues)
 }
 
 func TestParsing(t *testing.T) {
@@ -69,6 +98,7 @@ func TestParsing(t *testing.T) {
 
 	// parses export keyword
 	parseAndCompare(t, "export OPTION_A=2", "OPTION_A", "2")
+	parseAndCompare(t, "export OPTION_B='\n'", "OPTION_B", "\n")
 
 	// it 'expands newlines in quoted strings' do
 	// expect(env('FOO="bar\nbaz"')).to eql('FOO' => "bar\nbaz")

@@ -42,8 +42,10 @@ func loadFile(filename string) (err error) {
 	}
 
 	for _, fullLine := range lines {
+		// fmt.Printf("Line: %v\n", fullLine)
 		if !isIgnoredLine(fullLine) {
 			key, value, err := parseLine(fullLine)
+			// fmt.Printf("Key: %v Value: %v\n", key, value)
 
 			if err == nil {
 				os.Setenv(key, value)
