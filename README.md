@@ -43,8 +43,8 @@ secretKey := os.Getenv("SECRET_KEY")
 While `.env` in the project root is the default, you don't have to be constrained
 
 ```go
-_ := godotenv.Load("somerandomfile")
-_ := godotenv.Load("filenumberone.env", "filenumbertwo.env")
+_ = godotenv.Load("somerandomfile")
+_ = godotenv.Load("filenumberone.env", "filenumbertwo.env")
 ```
 
 Are all valid options
