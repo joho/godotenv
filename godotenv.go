@@ -78,14 +78,27 @@ func parseLine(line string) (key string, value string, err error) {
 
 	value = splitString[1]
 
-	// ditch the comments
+	// ditch the comments (but keep quoted hashes)
 	if strings.Contains(value, "#") {
 		segmentsBetweenHashes := strings.Split(value, "#")
-		value = segmentsBetweenHashes[0]
-		// open quote in leftmost segment
-		if strings.Count(value, "\"") == 1 || strings.Count(value, "'") == 1 {
-			value = value + "#" + segmentsBetweenHashes[1]
+		quotesAreOpen := false
+		segmentsToKeep := make([]string, 0)
+		for _, segment := range segmentsBetweenHashes {
+			if strings.Count(segment, "\"") == 1 || strings.Count(segment, "'") == 1 {
+				if quotesAreOpen {
+					quotesAreOpen = false
+					segmentsToKeep = append(segmentsToKeep, segment)
+				} else {
+					quotesAreOpen = true
+				}
+			}
+
+			if len(segmentsToKeep) == 0 || quotesAreOpen {
+				segmentsToKeep = append(segmentsToKeep, segment)
+			}
 		}
+
+		value = strings.Join(segmentsToKeep, "#")
 	}
 
 	// check if we've got quoted values
