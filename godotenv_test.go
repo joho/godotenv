@@ -70,45 +70,36 @@ func TestParsing(t *testing.T) {
 	// parses export keyword
 	parseAndCompare(t, "export OPTION_A=2", "OPTION_A", "2")
 
-	/*
-			The rest of my TODO list
+	// it 'expands newlines in quoted strings' do
+	// expect(env('FOO="bar\nbaz"')).to eql('FOO' => "bar\nbaz")
+	parseAndCompare(t, "FOO=\"bar\\nbaz\"", "FOO", "bar\nbaz")
 
-			it 'expands newlines in quoted strings' do
-		    expect(env('FOO="bar\nbaz"')).to eql('FOO' => "bar\nbaz")
-		  end
+	// it 'parses varibales with "." in the name' do
+	// expect(env('FOO.BAR=foobar')).to eql('FOO.BAR' => 'foobar')
+	parseAndCompare(t, "FOO.BAR=foobar", "FOO.BAR", "foobar")
 
-		  it 'parses varibales with "." in the name' do
-		    expect(env('FOO.BAR=foobar')).to eql('FOO.BAR' => 'foobar')
-		  end
+	// it 'strips unquoted values' do
+	// expect(env('foo=bar ')).to eql('foo' => 'bar') # not 'bar '
+	parseAndCompare(t, "FOO=bar ", "FOO", "bar")
 
-		  it 'strips unquoted values' do
-		    expect(env('foo=bar ')).to eql('foo' => 'bar') # not 'bar '
-		  end
+	// it 'ignores inline comments' do
+	// expect(env("foo=bar # this is foo")).to eql('foo' => 'bar')
+	parseAndCompare(t, "FOO=bar # this is foo", "FOO", "bar")
 
-		  it 'throws an error if line format is incorrect' do
-		    expect{env('lol$wut')}.to raise_error(Dotenv::FormatError)
-		  end
+	// it 'allows # in quoted value' do
+	// expect(env('foo="bar#baz" # comment')).to eql('foo' => 'bar#baz')
+	parseAndCompare(t, "FOO=\"bar#baz\" # comment", "FOO", "bar#baz")
 
-		  it 'ignores empty lines' do
-		    expect(env("\n \t  \nfoo=bar\n \nfizz=buzz")).to eql('foo' => 'bar', 'fizz' => 'buzz')
-		  end
+	// it 'ignores comment lines' do
+	// expect(env("\n\n\n # HERE GOES FOO \nfoo=bar")).to eql('foo' => 'bar')
 
-		  it 'ignores inline comments' do
-		    expect(env("foo=bar # this is foo")).to eql('foo' => 'bar')
-		  end
+	// it 'parses # in quoted values' do
+	// expect(env('foo="ba#r"')).to eql('foo' => 'ba#r')
+	// expect(env("foo='ba#r'")).to eql('foo' => 'ba#r')
 
-		  it 'allows # in quoted value' do
-		    expect(env('foo="bar#baz" # comment')).to eql('foo' => 'bar#baz')
-		  end
+	// it 'throws an error if line format is incorrect' do
+	// expect{env('lol$wut')}.to raise_error(Dotenv::FormatError)
 
-		  it 'ignores comment lines' do
-		    expect(env("\n\n\n # HERE GOES FOO \nfoo=bar")).to eql('foo' => 'bar')
-		  end
-
-		  it 'parses # in quoted values' do
-		    expect(env('foo="ba#r"')).to eql('foo' => 'ba#r')
-		    expect(env("foo='ba#r'")).to eql('foo' => 'ba#r')
-		  end
-
-	*/
+	// it 'ignores empty lines' do
+	// expect(env("\n \t  \nfoo=bar\n \nfizz=buzz")).to eql('foo' => 'bar', 'fizz' => 'buzz')
 }
