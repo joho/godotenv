@@ -80,13 +80,18 @@ func parseLine(line string) (key string, value string, err error) {
 
 	// ditch the comments
 	if strings.Contains(value, "#") {
-		value = strings.Trim(strings.Split(value, "#")[0], " ")
+		segmentsBetweenHashes := strings.Split(value, "#")
+		value = segmentsBetweenHashes[0]
+		// open quote in leftmost segment
+		if strings.Count(value, "\"") == 1 {
+			value = value + "#" + segmentsBetweenHashes[1]
+		}
 	}
 
 	// check if we've got quoted values
 	if strings.Count(value, "\"") == 2 || strings.Count(value, "'") == 2 {
-		// pull the quotes off the edge
-		value = strings.Trim(value, "\"'")
+		// pull the quotes off the edges
+		value = strings.Trim(value, "\"' ")
 
 		// expand quotes
 		value = strings.Replace(value, "\\\"", "\"", -1)
