@@ -31,13 +31,17 @@ import (
     "os"
 )
 
-err := godotenv.Load()
-if err != nil {
-  os.Fatal("Error loading .env file")
-}
+func main() {
+  err := godotenv.Load()
+  if err != nil {
+    os.Fatal("Error loading .env file")
+  }
 
-s3Bucket := os.Getenv("S3_BUCKET")
-secretKey := os.Getenv("SECRET_KEY")
+  s3Bucket := os.Getenv("S3_BUCKET")
+  secretKey := os.Getenv("SECRET_KEY")
+
+  // now do something with s3 or whatever
+}
 ```
 
 While `.env` in the project root is the default, you don't have to be constrained
