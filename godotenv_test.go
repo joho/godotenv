@@ -83,6 +83,16 @@ func TestLoadQuotedEnv(t *testing.T) {
 	loadEnvAndCompareValues(t, envFileName, expectedValues)
 }
 
+func TestActualEnvVarsAreLeftAlone(t *testing.T) {
+	os.Clearenv()
+	os.Setenv("OPTION_A", "actualenv")
+	_ = Load("fixtures/plain.env")
+
+	if os.Getenv("OPTION_A") != "actualenv" {
+		t.Error("An ENV var set earlier was overwritten")
+	}
+}
+
 func TestParsing(t *testing.T) {
 	// unquoted values
 	parseAndCompare(t, "FOO=bar", "FOO", "bar")

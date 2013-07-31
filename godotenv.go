@@ -34,7 +34,7 @@ func loadFile(filename string) (err error) {
 		if !isIgnoredLine(fullLine) {
 			key, value, err := parseLine(fullLine)
 
-			if err == nil {
+			if err == nil && os.Getenv(key) == "" {
 				os.Setenv(key, value)
 			}
 		}
