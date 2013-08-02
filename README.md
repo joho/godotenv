@@ -44,14 +44,34 @@ func main() {
 }
 ```
 
-While `.env` in the project root is the default, you don't have to be constrained
+If you're even lazier than that, you can just take advantage of the autoload package which will read in `.env` on import
+
+```go
+import _ "github.com/joho/godotenv/autoload"
+```
+
+While `.env` in the project root is the default, you don't have to be constrained, both examples below are 100% legit
 
 ```go
 _ = godotenv.Load("somerandomfile")
 _ = godotenv.Load("filenumberone.env", "filenumbertwo.env")
 ```
 
-Are all valid options
+If you want to be really fancy with your env file you can do comments and exports (below is a valid env file)
+
+```shell
+# I am a comment and that is OK
+SOME_VAR=someval
+FOO=BAR # comments at line end are OK too
+export BAR=BAZ
+```
+
+Or finally you can do YAML(ish) style
+
+```yaml
+FOO: bar
+BAR: baz
+```
 
 ## Contributing
 
