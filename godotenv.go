@@ -16,9 +16,8 @@ and all the env vars declared in .env will be avaiable through os.Getenv("SOME_E
 package godotenv
 
 import (
-	"bufio"
 	"errors"
-	"io"
+	"io/ioutil"
 	"os"
 	"strings"
 )
@@ -49,12 +48,12 @@ func Load(filenames ...string) (err error) {
 }
 
 func loadFile(filename string) (err error) {
-	file, err := os.Open(filename)
+	content, err := ioutil.ReadFile(filename)
 	if err != nil {
 		return
 	}
 
-	lines := readRawLines(file)
+	lines := strings.Split(string(content), "\n")
 
 	for _, fullLine := range lines {
 		if !isIgnoredLine(fullLine) {
@@ -66,25 +65,6 @@ func loadFile(filename string) (err error) {
 		}
 	}
 
-	return
-}
-
-func readRawLines(file io.Reader) (lines []string) {
-	lineReader := bufio.NewReader(file)
-	for line, isPrefix, e := lineReader.ReadLine(); e == nil; line, isPrefix, e = lineReader.ReadLine() {
-		fullLine := string(line)
-		if isPrefix {
-			for {
-				line, isPrefix, _ = lineReader.ReadLine()
-				fullLine += string(line)
-				if !isPrefix {
-					break
-				}
-			}
-		}
-		// add a line to the game/parse
-		lines = append(lines, string(line))
-	}
 	return
 }
 
