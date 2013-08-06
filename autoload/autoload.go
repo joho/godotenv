@@ -1,4 +1,4 @@
-package "autoload"
+package autoload
 
 /*
 	You can just read the .env file on import just by doing
