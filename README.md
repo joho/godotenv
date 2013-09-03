@@ -26,15 +26,18 @@ SECRET_KEY=YOURSECRETKEYGOESHERE
 Then in your Go app you can do something like
 
 ```go
+package main
+
 import (
     "github.com/joho/godotenv"
+    "log"
     "os"
 )
 
 func main() {
   err := godotenv.Load()
   if err != nil {
-    os.Fatal("Error loading .env file")
+    log.Fatal("Error loading .env file")
   }
 
   s3Bucket := os.Getenv("S3_BUCKET")
