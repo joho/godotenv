@@ -76,6 +76,17 @@ FOO: bar
 BAR: baz
 ```
 
+as a final aside, if you don't want godotenv munging your env you can just get a map back instead
+
+```go
+var myEnv map[string]string
+myEnv, err := godotenv.Read()
+
+s3Bucket := myEnv["S3_BUCKET"]
+```
+
+end
+
 ## Contributing
 
 Contributions are most welcome! The parser itself is pretty stupidly naive and I wouldn't be surprised if it breaks with edge cases.

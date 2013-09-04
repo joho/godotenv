@@ -34,9 +34,7 @@ import (
 	It's important to note that it WILL NOT OVERRIDE an env variable that already exists - consider the .env file to set dev vars or sensible defaults
 */
 func Load(filenames ...string) (err error) {
-	if len(filenames) == 0 {
-		filenames = []string{".env"}
-	}
+	filenames = filenamesOrDefault(filenames)
 
 	for _, filename := range filenames {
 		err = loadFile(filename)
@@ -47,11 +45,54 @@ func Load(filenames ...string) (err error) {
 	return
 }
 
+func Read(filenames ...string) (envMap map[string]string, err error) {
+	filenames = filenamesOrDefault(filenames)
+	envMap = make(map[string]string)
+
+	for _, filename := range filenames {
+		individualEnvMap, individualErr := readFile(filename)
+
+		if individualErr != nil {
+			err = individualErr
+			return // return early on a spazout
+		}
+
+		for key, value := range individualEnvMap {
+			envMap[key] = value
+		}
+	}
+
+	return
+}
+
+func filenamesOrDefault(filenames []string) []string {
+	if len(filenames) == 0 {
+		return []string{".env"}
+	} else {
+		return filenames
+	}
+}
+
 func loadFile(filename string) (err error) {
+	envMap, err := readFile(filename)
+	if err != nil {
+		return
+	}
+
+	for key, value := range envMap {
+		os.Setenv(key, value)
+	}
+
+	return
+}
+
+func readFile(filename string) (envMap map[string]string, err error) {
 	content, err := ioutil.ReadFile(filename)
 	if err != nil {
 		return
 	}
+
+	envMap = make(map[string]string)
 
 	lines := strings.Split(string(content), "\n")
 
@@ -60,11 +101,10 @@ func loadFile(filename string) (err error) {
 			key, value, err := parseLine(fullLine)
 
 			if err == nil && os.Getenv(key) == "" {
-				os.Setenv(key, value)
+				envMap[key] = value
 			}
 		}
 	}
-
 	return
 }
 
