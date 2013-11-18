@@ -151,6 +151,10 @@ func TestParsing(t *testing.T) {
 	// expect(env('FOO.BAR=foobar')).to eql('FOO.BAR' => 'foobar')
 	parseAndCompare(t, "FOO.BAR=foobar", "FOO.BAR", "foobar")
 
+	// it 'parses varibales with several "=" in the value' do
+	// expect(env('FOO=foobar=')).to eql('FOO' => 'foobar=')
+	parseAndCompare(t, "FOO=foobar=", "FOO", "foobar=")
+
 	// it 'strips unquoted values' do
 	// expect(env('foo=bar ')).to eql('foo' => 'bar') # not 'bar '
 	parseAndCompare(t, "FOO=bar ", "FOO", "bar")
