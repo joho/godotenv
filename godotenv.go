@@ -138,11 +138,11 @@ func parseLine(line string) (key string, value string, err error) {
 	}
 
 	// now split key from value
-	splitString := strings.Split(line, "=")
+	splitString := strings.SplitN(line, "=", 2)
 
 	if len(splitString) != 2 {
 		// try yaml mode!
-		splitString = strings.Split(line, ":")
+		splitString = strings.SplitN(line, ":", 2)
 	}
 
 	if len(splitString) != 2 {
