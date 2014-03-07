@@ -93,6 +93,15 @@ func TestLoadExportedEnv(t *testing.T) {
 	loadEnvAndCompareValues(t, envFileName, expectedValues)
 }
 
+func TestLoadEqualsEnv(t *testing.T) {
+	envFileName := "fixtures/equals.env"
+	expectedValues := map[string]string{
+		"OPTION_A": "postgres://localhost:5432/database?sslmode=disable",
+	}
+
+	loadEnvAndCompareValues(t, envFileName, expectedValues)
+}
+
 func TestLoadQuotedEnv(t *testing.T) {
 	envFileName := "fixtures/quoted.env"
 	expectedValues := map[string]string{
