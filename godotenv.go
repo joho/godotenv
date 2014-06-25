@@ -16,8 +16,8 @@ and all the env vars declared in .env will be avaiable through os.Getenv("SOME_E
 package godotenv
 
 import (
+	"bufio"
 	"errors"
-	"io/ioutil"
 	"os"
 	"strings"
 )
@@ -87,14 +87,21 @@ func loadFile(filename string) (err error) {
 }
 
 func readFile(filename string) (envMap map[string]string, err error) {
-	content, err := ioutil.ReadFile(filename)
+	file, err := os.Open(filename)
+
+	// content, err := ioutil.ReadFile(filename)
 	if err != nil {
 		return
 	}
+	defer file.Close()
 
 	envMap = make(map[string]string)
 
-	lines := strings.Split(string(content), "\n")
+	var lines []string
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		lines = append(lines, scanner.Text())
+	}
 
 	for _, fullLine := range lines {
 		if !isIgnoredLine(fullLine) {
