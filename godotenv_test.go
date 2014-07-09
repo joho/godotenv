@@ -32,8 +32,9 @@ func loadEnvAndCompareValues(t *testing.T, envFileName string, expectedValues ma
 
 func TestLoadWithNoArgsLoadsDotEnv(t *testing.T) {
 	err := Load()
-	if err.Error() != "open .env: no such file or directory" {
-		t.Errorf("Didn't try and open .env by default")
+	pathError := err.(*os.PathError)
+	if pathError == nil || pathError.Op != "open" || pathError.Path != ".env"{
+		t.Errorf("Didn't try and open .env by default")11
 	}
 }
 
