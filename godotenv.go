@@ -88,8 +88,6 @@ func loadFile(filename string) (err error) {
 
 func readFile(filename string) (envMap map[string]string, err error) {
 	file, err := os.Open(filename)
-
-	// content, err := ioutil.ReadFile(filename)
 	if err != nil {
 		return
 	}
