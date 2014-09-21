@@ -11,8 +11,10 @@ import (
 )
 
 func main() {
-	showHelp := *flag.Bool("h", false, "show help")
-	rawEnvFilenames := *flag.String("f", "", "comma separated paths to .env files")
+	var showHelp bool
+	flag.BoolVar(&showHelp, "h", false, "show help")
+	var rawEnvFilenames string
+	flag.StringVar(&rawEnvFilenames, "f", "", "comma separated paths to .env files")
 
 	flag.Parse()
 
@@ -29,26 +31,28 @@ example
 `
 	// if no args or -h flag
 	// print usage and return
-	if showHelp || len(os.Args) < 2 {
+	args := flag.Args()
+	if showHelp || len(args) == 0 {
 		fmt.Println(usage)
 		return
 	}
 
 	// load env
-	// TODO something in flag passing or whatever isn't quite right
-	envFilenames := strings.Split(rawEnvFilenames, ",")
-	fmt.Printf("env filenames %v\n", envFilenames)
-	godotenv.Load(envFilenames...)
-	fmt.Printf("FOO=%v\n", os.Getenv("FOO"))
+	// TODO would be nicer for an empty rawEnvFilenames to give us an empty map
+	// and then only call Load() once
+	// other TODO error handling on Load()
+	if rawEnvFilenames == "" {
+		godotenv.Load()
+	} else {
+		envFilenames := strings.Split(rawEnvFilenames, ",")
+		godotenv.Load(envFilenames...)
+	}
 
 	// take rest of args and "exec" them
-	args := flag.Args()
 	cmd := args[0]
 	cmdArgs := args[1:len(args)]
-	fmt.Printf("cmd %v with args: %v\n", cmd, cmdArgs)
 
 	command := exec.Command(cmd, cmdArgs...)
-	// command.Env = os.Environ()
 	command.Stdin = os.Stdin
 	command.Stdout = os.Stdout
 	command.Stderr = os.Stderr
