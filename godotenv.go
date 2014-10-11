@@ -19,6 +19,7 @@ import (
 	"bufio"
 	"errors"
 	"os"
+	"os/exec"
 	"strings"
 )
 
@@ -63,6 +64,16 @@ func Read(filenames ...string) (envMap map[string]string, err error) {
 	}
 
 	return
+}
+
+func Exec(filenames []string, cmd string, cmdArgs []string) error {
+	Load(filenames...)
+
+	command := exec.Command(cmd, cmdArgs...)
+	command.Stdin = os.Stdin
+	command.Stdout = os.Stdout
+	command.Stderr = os.Stderr
+	return command.Run()
 }
 
 func filenamesOrDefault(filenames []string) []string {

@@ -3,8 +3,8 @@ package main
 import (
 	"flag"
 	"fmt"
-	"os"
-	"os/exec"
+	"log"
+
 	"strings"
 
 	"github.com/joho/godotenv"
@@ -38,23 +38,17 @@ example
 	}
 
 	// load env
-	// TODO would be nicer for an empty rawEnvFilenames to give us an empty map
-	// and then only call Load() once
-	// other TODO error handling on Load()
-	if rawEnvFilenames == "" {
-		godotenv.Load()
-	} else {
-		envFilenames := strings.Split(rawEnvFilenames, ",")
-		godotenv.Load(envFilenames...)
+	var envFilenames []string
+	if rawEnvFilenames != "" {
+		envFilenames = strings.Split(rawEnvFilenames, ",")
 	}
 
 	// take rest of args and "exec" them
 	cmd := args[0]
 	cmdArgs := args[1:len(args)]
 
-	command := exec.Command(cmd, cmdArgs...)
-	command.Stdin = os.Stdin
-	command.Stdout = os.Stdout
-	command.Stderr = os.Stderr
-	command.Start()
+	err := godotenv.Exec(envFilenames, cmd, cmdArgs)
+	if err != nil {
+		log.Fatal(err)
+	}
 }
