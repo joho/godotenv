@@ -8,10 +8,21 @@ From the original Library:
 >
 > But it is not always practical to set environment variables on development machines or continuous integration servers where multiple projects are run. Dotenv load variables from a .env file into ENV when the environment is bootstrapped.
 
+It can be used as a library (for loading in env for your own daemons etc) or as a bin command.
+
+There is test coverage and CI for both linuxish and windows environments, but I make no guarantees about the bin version working on windows.
+
 ## Installation
+
+As a library
 
 ```shell
 go get github.com/joho/godotenv
+```
+
+or if you want to use it as a bin command
+```shell
+go get github.com/joho/godotenv/cmd/godotenv
 ```
 
 ## Usage
@@ -85,7 +96,15 @@ myEnv, err := godotenv.Read()
 s3Bucket := myEnv["S3_BUCKET"]
 ```
 
-end
+### Command Mode
+
+Assuming you've installed the command as above and you've got `$GOPATH/bin` in your `$PATH`
+
+```
+godotenv -f /some/path/to/.env some_command with some args
+```
+
+If you don't specify `-f` it will fall back on the default of loading `.env` in `PWD`
 
 ## Contributing
 
