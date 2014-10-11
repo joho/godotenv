@@ -46,6 +46,10 @@ func Load(filenames ...string) (err error) {
 	return
 }
 
+/*
+  Read all env (with same file loading semantics as Load) but return values as
+  a map rather than automatically writing values into env
+*/
 func Read(filenames ...string) (envMap map[string]string, err error) {
 	filenames = filenamesOrDefault(filenames)
 	envMap = make(map[string]string)
@@ -66,6 +70,15 @@ func Read(filenames ...string) (envMap map[string]string, err error) {
 	return
 }
 
+/*
+  Loads env vars from the specified filenames (empty map falls back to default)
+  then executes the cmd specified.
+
+  Simply hooks up os.Stdin/err/out to the command and calls Run()
+
+  If you want more fine grained control over your command it's recommended
+  that you use `Load()` or `Read()` and the `os/exec` package yourself.
+*/
 func Exec(filenames []string, cmd string, cmdArgs []string) error {
 	Load(filenames...)
 
