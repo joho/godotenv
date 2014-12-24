@@ -104,7 +104,9 @@ func loadFile(filename string) (err error) {
 	}
 
 	for key, value := range envMap {
-		os.Setenv(key, value)
+		if os.Getenv(key) == "" {
+			os.Setenv(key, value)
+		}
 	}
 
 	return
@@ -129,7 +131,7 @@ func readFile(filename string) (envMap map[string]string, err error) {
 		if !isIgnoredLine(fullLine) {
 			key, value, err := parseLine(fullLine)
 
-			if err == nil && os.Getenv(key) == "" {
+			if err == nil {
 				envMap[key] = value
 			}
 		}
