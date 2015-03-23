@@ -86,9 +86,8 @@ func Exec(filenames []string, cmd string, cmdArgs []string) error {
 func filenamesOrDefault(filenames []string) []string {
 	if len(filenames) == 0 {
 		return []string{".env"}
-	} else {
-		return filenames
 	}
+	return filenames
 }
 
 func loadFile(filename string) error {
