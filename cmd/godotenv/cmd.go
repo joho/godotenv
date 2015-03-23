@@ -45,7 +45,7 @@ example
 
 	// take rest of args and "exec" them
 	cmd := args[0]
-	cmdArgs := args[1:len(args)]
+	cmdArgs := args[1:]
 
 	err := godotenv.Exec(envFilenames, cmd, cmdArgs)
 	if err != nil {
