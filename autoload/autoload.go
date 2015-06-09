@@ -11,5 +11,5 @@ package autoload
 import "github.com/joho/godotenv"
 
 func init() {
-	_ = godotenv.Load()
+	godotenv.Load()
 }
