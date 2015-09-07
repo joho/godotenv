@@ -36,7 +36,30 @@ func Load(filenames ...string) (err error) {
 	filenames = filenamesOrDefault(filenames)
 
 	for _, filename := range filenames {
-		err = loadFile(filename)
+		err = loadFile(filename, false)
+		if err != nil {
+			return // return early on a spazout
+		}
+	}
+	return
+}
+
+// Overload will read your env file(s) and load them into ENV for this process.
+//
+// Call this function as close as possible to the start of your program (ideally in main)
+//
+// If you call Overload without any args it will default to loading .env in the current path
+//
+// You can otherwise tell it which files to load (there can be more than one) like
+//
+//		godotenv.Overload("fileone", "filetwo")
+//
+// It's important to note this WILL OVERRIDE an env variable that already exists - consider the .env file to forcefilly set all vars.
+func Overload(filenames ...string) (err error) {
+	filenames = filenamesOrDefault(filenames)
+
+	for _, filename := range filenames {
+		err = loadFile(filename, true)
 		if err != nil {
 			return // return early on a spazout
 		}
@@ -90,14 +113,14 @@ func filenamesOrDefault(filenames []string) []string {
 	return filenames
 }
 
-func loadFile(filename string) error {
+func loadFile(filename string, overload bool) error {
 	envMap, err := readFile(filename)
 	if err != nil {
 		return err
 	}
 
 	for key, value := range envMap {
-		if os.Getenv(key) == "" {
+		if os.Getenv(key) == "" || overload {
 			os.Setenv(key, value)
 		}
 	}
