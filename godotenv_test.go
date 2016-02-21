@@ -24,7 +24,7 @@ func loadEnvAndCompareValues(t *testing.T, loader func(files ...string) error, e
 
 	err := loader(envFileName)
 	if err != nil {
-		t.Fatalf("Error loading %v", envFileName)
+		t.Fatalf("Error loading %v, %v", envFileName, err)
 	}
 
 	for k := range expectedValues {
@@ -169,7 +169,6 @@ func TestLoadQuotedEnv(t *testing.T) {
 }
 
 func TestLoadImportsDefaultsEnv(t *testing.T) {
-	envFileName := "fixtures/imports_defaults.env"
 	expectedValues := map[string]string{
 		"OPTION_A": "7",
 		"OPTION_B": "2",
@@ -178,11 +177,12 @@ func TestLoadImportsDefaultsEnv(t *testing.T) {
 		"OPTION_E": "5",
 		"OPTION_F": "8",
 	}
-	loadEnvAndCompareValues(t, Load, envFileName, expectedValues, noopPresets)
+	loadEnvAndCompareValues(t, Load, "fixtures/imports_defaults.env", expectedValues, noopPresets)
+	loadEnvAndCompareValues(t, Load, "fixtures/sources_defaults.env", expectedValues, noopPresets)
+	loadEnvAndCompareValues(t, Load, "fixtures/sources_with_dot.env", expectedValues, noopPresets)
 }
 
 func TestLoadImportsOverridesEnv(t *testing.T) {
-	envFileName := "fixtures/imports_overrides.env"
 	expectedValues := map[string]string{
 		"OPTION_A": "1",
 		"OPTION_B": "2",
@@ -191,16 +191,25 @@ func TestLoadImportsOverridesEnv(t *testing.T) {
 		"OPTION_E": "5",
 		"OPTION_F": "8",
 	}
-	loadEnvAndCompareValues(t, Load, envFileName, expectedValues, noopPresets)
+	loadEnvAndCompareValues(t, Load, "fixtures/imports_overrides.env", expectedValues, noopPresets)
+	loadEnvAndCompareValues(t, Load, "fixtures/sources_overrides.env", expectedValues, noopPresets)
 }
 
 func TestLoadImportsRelativeEnv(t *testing.T) {
-	envFileName := "fixtures/imports_relative.env"
 	expectedValues := map[string]string{
 		"OPTION_A": "1",
 		"OPTION_B": "2",
 	}
-	loadEnvAndCompareValues(t, Load, envFileName, expectedValues, noopPresets)
+	loadEnvAndCompareValues(t, Load, "fixtures/imports_relative.env", expectedValues, noopPresets)
+	loadEnvAndCompareValues(t, Load, "fixtures/sources_relative.env", expectedValues, noopPresets)
+}
+
+func TestLoadImportsMissingEnv(t *testing.T) {
+	expectedValues := map[string]string{
+		"OPTION_A": "1",
+	}
+	loadEnvAndCompareValues(t, Load, "fixtures/imports_missing.env", expectedValues, noopPresets)
+	loadEnvAndCompareValues(t, Load, "fixtures/sources_missing.env", expectedValues, noopPresets)
 }
 
 func TestActualEnvVarsAreLeftAlone(t *testing.T) {
@@ -319,7 +328,26 @@ func TestParseImport(t *testing.T) {
 	for _, test := range tests {
 		parsed := parseImport(test.line)
 		if parsed != test.expected {
-			t.Error("Parsing [%s] didn't parse to [%s], instead parsed to [%s]", test.line, test.expected, parsed)
+			t.Errorf("Parsing [%s] didn't parse to [%s], instead parsed to [%s]", test.line, test.expected, parsed)
+		}
+	}
+}
+
+func TestParseSource(t *testing.T) {
+	tests := []struct {
+		line     string
+		expected string
+	}{
+		{"source locals.env", "locals.env"},
+		{"source   locals.env", "locals.env"},
+		{". locals.env", "locals.env"},
+		{". /something/locals.env   ", "/something/locals.env"},
+		{"source /something/with spaces/locals.env   ", "/something/with spaces/locals.env"},
+	}
+	for _, test := range tests {
+		parsed := parseSource(test.line)
+		if parsed != test.expected {
+			t.Errorf("Parsing [%s] didn't parse to [%s], instead parsed to [%s]", test.line, test.expected, parsed)
 		}
 	}
 }

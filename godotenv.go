@@ -146,31 +146,24 @@ func readFile(filename string) (envMap map[string]string, err error) {
 	}
 
 	for _, fullLine := range lines {
-		if !isIgnoredLine(fullLine) {
-			key, value, err := parseLine(fullLine)
-
-			if err == nil {
-				envMap[key] = value
-			}
-		} else if importFile := parseImport(fullLine); importFile != "" {
-			// load import relative to location of current file
-			if !filepath.IsAbs(importFile) {
-				var absFileName string
-				absFileName, err = filepath.Abs(filename)
+		if isIgnoredLine(fullLine) {
+			if importFile := parseImport(fullLine); importFile != "" {
+				// load import relative to location of current file
+				err := loadNestedEnv(envMap, importFile, filename)
 				if err != nil {
-					// bail here.  Since we already opened the parent env file, Abs() should have
-					// worked
 					return envMap, err
 				}
-				fileDir := filepath.Dir(absFileName)
-				importFile = filepath.Join(fileDir, importFile)
 			}
-			nested, err := readFile(importFile)
+		} else if source := parseSource(fullLine); source != "" {
+			source = removeComments(source)
+			err := loadNestedEnv(envMap, source, filename)
 			if err != nil {
 				return envMap, err
 			}
-			// merge the nested map into the parent
-			for key, value := range nested {
+		} else {
+			key, value, err := parseLine(fullLine)
+
+			if err == nil {
 				envMap[key] = value
 			}
 		}
@@ -179,34 +172,47 @@ func readFile(filename string) (envMap map[string]string, err error) {
 	return
 }
 
+func pathToImport(importPath, sourceFile string) (string, error) {
+	if filepath.IsAbs(importPath) {
+		return importPath, nil
+	}
+	var absFileName string
+	absFileName, err := filepath.Abs(sourceFile)
+	if err != nil {
+		// bail here.  Since we already opened the parent env file, Abs() should have
+		// worked
+		return "", err
+	}
+	fileDir := filepath.Dir(absFileName)
+	return filepath.Join(fileDir, importPath), nil
+}
+
+func loadNestedEnv(parent map[string]string, nestedFileName, parentFileName string) error {
+	var err error
+	nestedFileName, err = pathToImport(nestedFileName, parentFileName)
+	if err != nil {
+		return err
+	}
+	nested, err := readFile(nestedFileName)
+	if err == nil {
+		// merge the nested map into the parent
+		for key, value := range nested {
+			parent[key] = value
+		}
+	} else if !os.IsNotExist(err) {
+		// ignore file not found errors.  imported files are ignored if not present
+		return err
+	}
+	return nil
+}
+
 func parseLine(line string) (key string, value string, err error) {
 	if len(line) == 0 {
 		err = errors.New("zero length string")
 		return
 	}
 
-	// ditch the comments (but keep quoted hashes)
-	if strings.Contains(line, "#") {
-		segmentsBetweenHashes := strings.Split(line, "#")
-		quotesAreOpen := false
-		var segmentsToKeep []string
-		for _, segment := range segmentsBetweenHashes {
-			if strings.Count(segment, "\"") == 1 || strings.Count(segment, "'") == 1 {
-				if quotesAreOpen {
-					quotesAreOpen = false
-					segmentsToKeep = append(segmentsToKeep, segment)
-				} else {
-					quotesAreOpen = true
-				}
-			}
-
-			if len(segmentsToKeep) == 0 || quotesAreOpen {
-				segmentsToKeep = append(segmentsToKeep, segment)
-			}
-		}
-
-		line = strings.Join(segmentsToKeep, "#")
-	}
+	line = removeComments(line)
 
 	// now split key from value
 	splitString := strings.SplitN(line, "=", 2)
@@ -252,10 +258,44 @@ func isIgnoredLine(line string) bool {
 	return len(trimmedLine) == 0 || strings.HasPrefix(trimmedLine, "#")
 }
 
+func removeComments(line string) string {
+	// ditch the comments (but keep quoted hashes)
+	if strings.Contains(line, "#") {
+		segmentsBetweenHashes := strings.Split(line, "#")
+		quotesAreOpen := false
+		var segmentsToKeep []string
+		for _, segment := range segmentsBetweenHashes {
+			if strings.Count(segment, "\"") == 1 || strings.Count(segment, "'") == 1 {
+				if quotesAreOpen {
+					quotesAreOpen = false
+					segmentsToKeep = append(segmentsToKeep, segment)
+				} else {
+					quotesAreOpen = true
+				}
+			}
+
+			if len(segmentsToKeep) == 0 || quotesAreOpen {
+				segmentsToKeep = append(segmentsToKeep, segment)
+			}
+		}
+
+		line = strings.Join(segmentsToKeep, "#")
+	}
+	return line
+}
+
 func parseImport(line string) string {
-	submatches := regexp.MustCompile(`(?m)^\s*#\s*import:(.*)$`).FindStringSubmatch(line)
+	submatches := regexp.MustCompile(`(?m)^#\s*import:(.*)$`).FindStringSubmatch(line)
 	if len(submatches) < 2 {
 		return ""
 	}
 	return strings.Trim(submatches[1], " \n\t")
+}
+
+func parseSource(line string) string {
+	submatches := regexp.MustCompile(`(?m)^(\.|source) \s*(.*)$`).FindStringSubmatch(line)
+	if len(submatches) < 3 {
+		return ""
+	}
+	return strings.Trim(submatches[2], " \n\t")
 }
