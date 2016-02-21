@@ -168,6 +168,41 @@ func TestLoadQuotedEnv(t *testing.T) {
 	loadEnvAndCompareValues(t, Load, envFileName, expectedValues, noopPresets)
 }
 
+func TestLoadImportsDefaultsEnv(t *testing.T) {
+	envFileName := "fixtures/imports_defaults.env"
+	expectedValues := map[string]string{
+		"OPTION_A": "7",
+		"OPTION_B": "2",
+		"OPTION_C": "3",
+		"OPTION_D": "4",
+		"OPTION_E": "5",
+		"OPTION_F": "8",
+	}
+	loadEnvAndCompareValues(t, Load, envFileName, expectedValues, noopPresets)
+}
+
+func TestLoadImportsOverridesEnv(t *testing.T) {
+	envFileName := "fixtures/imports_overrides.env"
+	expectedValues := map[string]string{
+		"OPTION_A": "1",
+		"OPTION_B": "2",
+		"OPTION_C": "3",
+		"OPTION_D": "4",
+		"OPTION_E": "5",
+		"OPTION_F": "8",
+	}
+	loadEnvAndCompareValues(t, Load, envFileName, expectedValues, noopPresets)
+}
+
+func TestLoadImportsRelativeEnv(t *testing.T) {
+	envFileName := "fixtures/imports_relative.env"
+	expectedValues := map[string]string{
+		"OPTION_A": "1",
+		"OPTION_B": "2",
+	}
+	loadEnvAndCompareValues(t, Load, envFileName, expectedValues, noopPresets)
+}
+
 func TestActualEnvVarsAreLeftAlone(t *testing.T) {
 	os.Clearenv()
 	os.Setenv("OPTION_A", "actualenv")
@@ -267,5 +302,24 @@ func TestLinesToIgnore(t *testing.T) {
 	// make sure we're not getting false positives
 	if isIgnoredLine("export OPTION_B='\\n'") {
 		t.Error("ignoring a perfectly valid line to parse")
+	}
+}
+
+func TestParseImport(t *testing.T) {
+	tests := []struct {
+		line     string
+		expected string
+	}{
+		{"# import: locals.env", "locals.env"},
+		{"#import:locals.env", "locals.env"},
+		{"#   import:    locals.env   ", "locals.env"},
+		{"# import: /something/locals.env   ", "/something/locals.env"},
+		{"# import: /something/with spaces/locals.env   ", "/something/with spaces/locals.env"},
+	}
+	for _, test := range tests {
+		parsed := parseImport(test.line)
+		if parsed != test.expected {
+			t.Error("Parsing [%s] didn't parse to [%s], instead parsed to [%s]", test.line, test.expected, parsed)
+		}
 	}
 }
