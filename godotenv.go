@@ -19,6 +19,8 @@ import (
 	"os"
 	"os/exec"
 	"strings"
+	"regexp"
+	"path/filepath"
 )
 
 // Load will read your env file(s) and load them into ENV for this process.
@@ -150,7 +152,29 @@ func readFile(filename string) (envMap map[string]string, err error) {
 			if err == nil {
 				envMap[key] = value
 			}
+		} else if importFile := parseImport(fullLine); importFile != "" {
+			// load import relative to location of current file
+			if !filepath.IsAbs(importFile) {
+				var absFileName string
+				absFileName, err = filepath.Abs(filename)
+				if err != nil {
+					// bail here.  Since we already opened the parent env file, Abs() should have
+					// worked
+					return envMap, err
+				}
+				fileDir := filepath.Dir(absFileName)
+				importFile = filepath.Join(fileDir, importFile)
+			}
+			nested, err := readFile(importFile)
+			if err != nil {
+				return envMap, err
+			}
+			// merge the nested map into the parent
+			for key, value := range nested {
+				envMap[key] = value
+			}
 		}
+
 	}
 	return
 }
@@ -226,4 +250,12 @@ func parseLine(line string) (key string, value string, err error) {
 func isIgnoredLine(line string) bool {
 	trimmedLine := strings.Trim(line, " \n\t")
 	return len(trimmedLine) == 0 || strings.HasPrefix(trimmedLine, "#")
+}
+
+func parseImport(line string) string {
+	submatches := regexp.MustCompile(`(?m)^\s*#\s*import:(.*)$`).FindStringSubmatch(line)
+	if len(submatches) < 2 {
+		return ""
+	}
+	return strings.Trim(submatches[1], " \n\t")
 }
