@@ -2,6 +2,8 @@ package godotenv
 
 import (
 	"os"
+	"reflect"
+	"strings"
 	"testing"
 )
 
@@ -89,6 +91,32 @@ func TestReadPlainEnv(t *testing.T) {
 		if envMap[key] != value {
 			t.Error("Read got one of the keys wrong")
 		}
+	}
+}
+
+func TestReadFromPlainEnv(t *testing.T) {
+	input := strings.NewReader(`
+OPTION_A=1
+OPTION_B=2
+OPTION_C= 3
+OPTION_D =4
+OPTION_E = 5
+	`)
+	expectedValues := map[string]string{
+		"OPTION_A": "1",
+		"OPTION_B": "2",
+		"OPTION_C": "3",
+		"OPTION_D": "4",
+		"OPTION_E": "5",
+	}
+
+	envMap, err := ReadFrom(input)
+	if err != nil {
+		t.Errorf("Error parsing input: %s", err)
+	}
+
+	if !reflect.DeepEqual(expectedValues, envMap) {
+		t.Errorf("Expected %#v, got %#v", expectedValues, envMap)
 	}
 }
 
