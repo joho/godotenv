@@ -149,11 +149,13 @@ func readFile(filename string) (envMap map[string]string, err error) {
 
 	for _, fullLine := range lines {
 		if !isIgnoredLine(fullLine) {
-			key, value, err := parseLine(fullLine)
+			var key, value string
+			key, value, err = parseLine(fullLine)
 
-			if err == nil {
-				envMap[key] = value
+			if err != nil {
+				return
 			}
+			envMap[key] = value
 		}
 	}
 	return
