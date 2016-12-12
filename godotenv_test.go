@@ -269,3 +269,12 @@ func TestLinesToIgnore(t *testing.T) {
 		t.Error("ignoring a perfectly valid line to parse")
 	}
 }
+
+func TestErrorReadDirectory(t *testing.T) {
+	envFileName := "fixtures/"
+	envMap, err := Read(envFileName)
+
+	if err == nil {
+		t.Errorf("Expected error, got %v", envMap)
+	}
+}
