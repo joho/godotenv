@@ -216,14 +216,16 @@ func parseLine(line string) (key string, value string, err error) {
 	value = strings.Trim(value, " ")
 
 	// check if we've got quoted values
-	if strings.Count(value, "\"") == 2 || strings.Count(value, "'") == 2 {
+	first := string(value[0:1])
+	last := string(value[len(value)-1:])
+	if first == last && strings.ContainsAny(first, `"'`) {
 		// pull the quotes off the edges
-		value = strings.Trim(value, "\"'")
+		value = strings.Trim(value, `"'`)
 
 		// expand quotes
-		value = strings.Replace(value, "\\\"", "\"", -1)
+		value = strings.Replace(value, `\"`, `"`, -1)
 		// expand newlines
-		value = strings.Replace(value, "\\n", "\n", -1)
+		value = strings.Replace(value, `\n`, "\n", -1)
 	}
 
 	return
