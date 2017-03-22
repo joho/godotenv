@@ -74,6 +74,8 @@ func TestReadPlainEnv(t *testing.T) {
 		"OPTION_C": "3",
 		"OPTION_D": "4",
 		"OPTION_E": "5",
+		"OPTION_F": "",
+		"OPTION_G": "",
 	}
 
 	envMap, err := Read(envFileName)
