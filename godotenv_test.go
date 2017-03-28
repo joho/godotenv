@@ -100,10 +100,12 @@ func TestLoadDoesNotOverride(t *testing.T) {
 	// ensure NO overload
 	presets := map[string]string{
 		"OPTION_A": "do_not_override",
+		"OPTION_B": "",
 	}
 
 	expectedValues := map[string]string{
 		"OPTION_A": "do_not_override",
+		"OPTION_B": "",
 	}
 	loadEnvAndCompareValues(t, Load, envFileName, expectedValues, presets)
 }
