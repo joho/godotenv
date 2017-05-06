@@ -18,6 +18,7 @@ import (
 	"errors"
 	"os"
 	"os/exec"
+	"regexp"
 	"strings"
 )
 
@@ -218,7 +219,11 @@ func parseLine(line string) (key string, value string, err error) {
 	key = strings.Trim(key, " ")
 
 	// Parse the value
-	value = splitString[1]
+	value = parseValue(splitString[1])
+	return
+}
+
+func parseValue(value string) string {
 
 	// trim
 	value = strings.Trim(value, " ")
@@ -230,15 +235,23 @@ func parseLine(line string) (key string, value string, err error) {
 		if first == last && strings.ContainsAny(first, `"'`) {
 			// pull the quotes off the edges
 			value = strings.Trim(value, `"'`)
-
-			// expand quotes
-			value = strings.Replace(value, `\"`, `"`, -1)
-			// expand newlines
-			value = strings.Replace(value, `\n`, "\n", -1)
+			// handle escapes
+			escapeRegex := regexp.MustCompile(`\\.`)
+			value = escapeRegex.ReplaceAllStringFunc(value, func(match string) string {
+				c := strings.TrimPrefix(match, `\`)
+				switch c {
+				case "n":
+					return "\n"
+				case "r":
+					return "\r"
+				default:
+					return c
+				}
+			})
 		}
 	}
 
-	return
+	return value
 }
 
 func isIgnoredLine(line string) bool {

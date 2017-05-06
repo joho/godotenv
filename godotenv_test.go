@@ -238,6 +238,11 @@ func TestParsing(t *testing.T) {
 	parseAndCompare(t, `FOO="ba#r"`, "FOO", "ba#r")
 	parseAndCompare(t, "FOO='ba#r'", "FOO", "ba#r")
 
+	//newlines and backslashes should be escaped
+	parseAndCompare(t, `FOO="bar\n\ b\az"`, "FOO", "bar\n baz")
+	parseAndCompare(t, `FOO="bar\\\n\ b\az"`, "FOO", "bar\\\n baz")
+	parseAndCompare(t, `FOO="bar\\r\ b\az"`, "FOO", "bar\\r baz")
+
 	// it 'throws an error if line format is incorrect' do
 	// expect{env('lol$wut')}.to raise_error(Dotenv::FormatError)
 	badlyFormattedLine := "lol$wut"
