@@ -2,7 +2,9 @@ package godotenv
 
 import (
 	"bytes"
+	"fmt"
 	"os"
+	"reflect"
 	"testing"
 )
 
@@ -324,5 +326,49 @@ func TestErrorParsing(t *testing.T) {
 	envMap, err := Read(envFileName)
 	if err == nil {
 		t.Errorf("Expected error, got %v", envMap)
+	}
+}
+
+func TestWrite(t *testing.T) {
+	writeAndCompare := func(env string, expected string) {
+		envMap, _ := ParseString(env)
+		actual, _ := WriteString(envMap)
+		if expected != actual {
+			t.Errorf("Expected '%v' (%v) to write as '%v', got '%v' instead.", env, envMap, expected, actual)
+		}
+	}
+	//just test some single lines to show the general idea
+	//TestRoundtrip makes most of the good assertions
+
+	//values are always double-quoted
+	writeAndCompare(`key=value`, `key="value"`)
+	//double-quotes are escaped
+	writeAndCompare(`key=va"lu"e`, `key="va\"lu\"e"`)
+	//but single quotes are left alone
+	writeAndCompare(`key=va'lu'e`, `key="va'lu'e"`)
+	// newlines and backslashes are escaped
+	writeAndCompare(`foo="ba\n\r\\r!"`, `foo="ba\n\r\\r!"`)
+}
+
+func TestRoundtrip(t *testing.T) {
+	fixtures := []string{"equals.env", "exported.env", "invalid1.env", "plain.env", "quoted.env"}
+	for _, fixture := range fixtures {
+		fixtureFilename := fmt.Sprintf("fixtures/%s", fixture)
+		env, err := readFile(fixtureFilename)
+		if err != nil {
+			continue
+		}
+		rep, err := WriteString(env)
+		if err != nil {
+			continue
+		}
+		roundtripped, err := ParseString(rep)
+		if err != nil {
+			continue
+		}
+		if !reflect.DeepEqual(env, roundtripped) {
+			t.Errorf("Expected '%s' to roundtrip as '%v', got '%v' instead", fixtureFilename, env, roundtripped)
+		}
+
 	}
 }

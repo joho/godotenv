@@ -16,6 +16,7 @@ package godotenv
 import (
 	"bufio"
 	"errors"
+	"fmt"
 	"io"
 	"os"
 	"os/exec"
@@ -119,6 +120,11 @@ func Parse(r io.Reader) (envMap map[string]string, err error) {
 	return
 }
 
+//ParseString reads an env file from a string, returning a map of keys and values.
+func ParseString(str string) (envMap map[string]string, err error) {
+	return Parse(strings.NewReader(str))
+}
+
 // Exec loads env vars from the specified filenames (empty map falls back to default)
 // then executes the cmd specified.
 //
@@ -134,6 +140,31 @@ func Exec(filenames []string, cmd string, cmdArgs []string) error {
 	command.Stdout = os.Stdout
 	command.Stderr = os.Stderr
 	return command.Run()
+}
+
+// Write serializes the given environment and writes it to a file
+func Write(envMap map[string]string, filename string) error {
+	content, error := WriteString(envMap)
+	if error != nil {
+		return error
+	}
+	file, error := os.Create(filename)
+	if error != nil {
+		return error
+	}
+	_, err := file.WriteString(content)
+	return err
+}
+
+// WriteString outputs the given environment as a dotenv-formatted environment file.
+//
+// Each line is in the format: KEY="VALUE" where VALUE is backslash-escaped.
+func WriteString(envMap map[string]string) (string, error) {
+	lines := make([]string, 0, len(envMap))
+	for k, v := range envMap {
+		lines = append(lines, fmt.Sprintf(`%s="%s"`, k, doubleQuoteEscape(v)))
+	}
+	return strings.Join(lines, "\n"), nil
 }
 
 func filenamesOrDefault(filenames []string) []string {
@@ -263,4 +294,12 @@ func parseValue(value string) string {
 func isIgnoredLine(line string) bool {
 	trimmedLine := strings.Trim(line, " \n\t")
 	return len(trimmedLine) == 0 || strings.HasPrefix(trimmedLine, "#")
+}
+
+func doubleQuoteEscape(line string) string {
+	line = strings.Replace(line, `\`, `\\`, -1)
+	line = strings.Replace(line, "\n", `\n`, -1)
+	line = strings.Replace(line, "\r", `\r`, -1)
+	line = strings.Replace(line, `"`, `\"`, -1)
+	return line
 }
