@@ -234,7 +234,7 @@ func parseValue(value string) string {
 		last := string(value[len(value)-1:])
 		if first == last && strings.ContainsAny(first, `"'`) {
 			// pull the quotes off the edges
-			value = strings.Trim(value, `"'`)
+			value = value[1 : len(value)-1]
 			// handle escapes
 			escapeRegex := regexp.MustCompile(`\\.`)
 			value = escapeRegex.ReplaceAllStringFunc(value, func(match string) string {
