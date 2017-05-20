@@ -205,6 +205,12 @@ func TestParsing(t *testing.T) {
 	// parses yaml style options
 	parseAndCompare(t, "OPTION_A: 1", "OPTION_A", "1")
 
+	//parses yaml values with equal signs
+	parseAndCompare(t, "OPTION_A: Foo=bar", "OPTION_A", "Foo=bar")
+
+	// parses non-yaml options with colons
+	parseAndCompare(t, "OPTION_A=1:B", "OPTION_A", "1:B")
+
 	// parses export keyword
 	parseAndCompare(t, "export OPTION_A=2", "OPTION_A", "2")
 	parseAndCompare(t, `export OPTION_B='\n'`, "OPTION_B", "\n")
