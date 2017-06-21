@@ -108,7 +108,11 @@ func Exec(filenames []string, cmd string, cmdArgs []string) error {
 
 func filenamesOrDefault(filenames []string) []string {
 	if len(filenames) == 0 {
-		return []string{".env"}
+		filename, exists := os.LookupEnv("DOTENV_FILENAME")
+		if !exists {
+			filename = ".env"
+		}
+		return []string{filename}
 	}
 	return filenames
 }
