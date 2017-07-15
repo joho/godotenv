@@ -10,7 +10,7 @@
 //
 // 		godotenv.Load()
 //
-// and all the env vars declared in .env will be avaiable through os.Getenv("SOME_ENV_VAR")
+// and all the env vars declared in .env will be available through os.Getenv("SOME_ENV_VAR")
 package godotenv
 
 import (
