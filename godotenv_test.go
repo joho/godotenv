@@ -252,6 +252,10 @@ func TestParsing(t *testing.T) {
 	parseAndCompare(t, `FOO="bar\\\n\ b\az"`, "FOO", "bar\\\n baz")
 	parseAndCompare(t, `FOO="bar\\r\ b\az"`, "FOO", "bar\\r baz")
 
+	parseAndCompare(t, `="value"`, "", "value")
+	parseAndCompare(t, `KEY="`, "KEY", "\"")
+	parseAndCompare(t, `KEY="value`, "KEY", "\"value")
+
 	// it 'throws an error if line format is incorrect' do
 	// expect{env('lol$wut')}.to raise_error(Dotenv::FormatError)
 	badlyFormattedLine := "lol$wut"

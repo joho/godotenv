@@ -228,8 +228,8 @@ func parseValue(value string) string {
 	// trim
 	value = strings.Trim(value, " ")
 
-	// check if we've got quoted values
-	if value != "" {
+	// check if we've got quoted values or possible escapes
+	if len(value) > 1 {
 		first := string(value[0:1])
 		last := string(value[len(value)-1:])
 		if first == last && strings.ContainsAny(first, `"'`) {
