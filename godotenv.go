@@ -24,6 +24,8 @@ import (
 	"strings"
 )
 
+const doubleQuoteSpecialChars = "\\\n\r\"!$`"
+
 // Load will read your env file(s) and load them into ENV for this process.
 //
 // Call this function as close as possible to the start of your program (ideally in main)
@@ -297,9 +299,15 @@ func isIgnoredLine(line string) bool {
 }
 
 func doubleQuoteEscape(line string) string {
-	line = strings.Replace(line, `\`, `\\`, -1)
-	line = strings.Replace(line, "\n", `\n`, -1)
-	line = strings.Replace(line, "\r", `\r`, -1)
-	line = strings.Replace(line, `"`, `\"`, -1)
+	for _, c := range doubleQuoteSpecialChars {
+		toReplace := "\\" + string(c)
+		if c == '\n' {
+			toReplace = `\n`
+		}
+		if c == '\r' {
+			toReplace = `\r`
+		}
+		line = strings.Replace(line, string(c), toReplace, -1)
+	}
 	return line
 }

@@ -346,8 +346,8 @@ func TestWrite(t *testing.T) {
 	writeAndCompare(`key=va"lu"e`, `key="va\"lu\"e"`)
 	//but single quotes are left alone
 	writeAndCompare(`key=va'lu'e`, `key="va'lu'e"`)
-	// newlines and backslashes are escaped
-	writeAndCompare(`foo="ba\n\r\\r!"`, `foo="ba\n\r\\r!"`)
+	// newlines, backslashes, and some other special chars are escaped
+	writeAndCompare(`foo="$ba\n\r\\r!"`, `foo="\$ba\n\r\\r\!"`)
 }
 
 func TestRoundtrip(t *testing.T) {
