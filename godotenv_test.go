@@ -1,6 +1,7 @@
 package godotenv
 
 import (
+	"bytes"
 	"os"
 	"testing"
 )
@@ -90,6 +91,23 @@ func TestReadPlainEnv(t *testing.T) {
 	for key, value := range expectedValues {
 		if envMap[key] != value {
 			t.Error("Read got one of the keys wrong")
+		}
+	}
+}
+
+func TestParse(t *testing.T) {
+	envMap, err := Parse(bytes.NewReader([]byte("ONE=1\nTWO='2'\nTHREE = \"3\"")))
+	expectedValues := map[string]string{
+		"ONE":   "1",
+		"TWO":   "2",
+		"THREE": "3",
+	}
+	if err != nil {
+		t.Fatalf("error parsing env: %v", err)
+	}
+	for key, value := range expectedValues {
+		if envMap[key] != value {
+			t.Errorf("expected %s to be %s, got %s", key, value, envMap[key])
 		}
 	}
 }

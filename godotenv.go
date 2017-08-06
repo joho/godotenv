@@ -16,6 +16,7 @@ package godotenv
 import (
 	"bufio"
 	"errors"
+	"io"
 	"os"
 	"os/exec"
 	"strings"
@@ -89,6 +90,34 @@ func Read(filenames ...string) (envMap map[string]string, err error) {
 	return
 }
 
+// Parse reads an env file from io.Reader, returning a map of keys and values.
+func Parse(r io.Reader) (envMap map[string]string, err error) {
+	envMap = make(map[string]string)
+
+	var lines []string
+	scanner := bufio.NewScanner(r)
+	for scanner.Scan() {
+		lines = append(lines, scanner.Text())
+	}
+
+	if err = scanner.Err(); err != nil {
+		return
+	}
+
+	for _, fullLine := range lines {
+		if !isIgnoredLine(fullLine) {
+			var key, value string
+			key, value, err = parseLine(fullLine)
+
+			if err != nil {
+				return
+			}
+			envMap[key] = value
+		}
+	}
+	return
+}
+
 // Exec loads env vars from the specified filenames (empty map falls back to default)
 // then executes the cmd specified.
 //
@@ -142,30 +171,7 @@ func readFile(filename string) (envMap map[string]string, err error) {
 	}
 	defer file.Close()
 
-	envMap = make(map[string]string)
-
-	var lines []string
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		lines = append(lines, scanner.Text())
-	}
-
-	if err = scanner.Err(); err != nil {
-		return
-	}
-
-	for _, fullLine := range lines {
-		if !isIgnoredLine(fullLine) {
-			var key, value string
-			key, value, err = parseLine(fullLine)
-
-			if err != nil {
-				return
-			}
-			envMap[key] = value
-		}
-	}
-	return
+	return Parse(file)
 }
 
 func parseLine(line string) (key string, value string, err error) {

@@ -96,6 +96,13 @@ myEnv, err := godotenv.Read()
 s3Bucket := myEnv["S3_BUCKET"]
 ```
 
+... or from an `io.Reader` instead of a local file
+
+```go
+reader := getRemoteFile()
+myEnv, err := godotenv.Parse(reader)
+```
+
 ### Command Mode
 
 Assuming you've installed the command as above and you've got `$GOPATH/bin` in your `$PATH`
