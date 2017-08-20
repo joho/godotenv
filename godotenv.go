@@ -16,6 +16,7 @@ package godotenv
 import (
 	"bufio"
 	"errors"
+	"fmt"
 	"io"
 	"os"
 	"os/exec"
@@ -116,6 +117,17 @@ func Parse(r io.Reader) (envMap map[string]string, err error) {
 		}
 	}
 	return
+}
+
+// FetchEnv returns environment variable if is set but panic when isn't (fail fast approach)
+// Example usage:
+//		godotenv.FetchEnv("PORT")
+func FetchEnv(key string) string {
+	val := os.Getenv(key)
+	if val == "" {
+		panic(fmt.Sprintf("Missing '%s' environment variable", key))
+	}
+	return val
 }
 
 // Exec loads env vars from the specified filenames (empty map falls back to default)

@@ -308,3 +308,20 @@ func TestErrorParsing(t *testing.T) {
 		t.Errorf("Expected error, got %v", envMap)
 	}
 }
+
+func TestFetchEnv(t *testing.T) {
+	os.Setenv("FETCH_ENV", "SET")
+	res := FetchEnv("FETCH_ENV")
+	if res != "SET" {
+		t.Errorf("The variable FETCH_ENV not set")
+	}
+}
+
+func TestFetchEnvPanic(t *testing.T) {
+	defer func() {
+		if r := recover(); r == nil {
+			t.Error("The code did not panic when ENV variable was not set")
+		}
+	}()
+	FetchEnv("FETCH_ENV_PANIC")
+}
