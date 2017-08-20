@@ -16,6 +16,7 @@ package godotenv
 import (
 	"bufio"
 	"errors"
+	"fmt"
 	"io"
 	"os"
 	"os/exec"
@@ -124,7 +125,7 @@ func Parse(r io.Reader) (envMap map[string]string, err error) {
 func FetchEnv(key string) string {
 	val := os.Getenv(key)
 	if val == "" {
-		panic("missing ENV variable")
+		panic(fmt.Sprintf("Missing '%s' environment variable", key))
 	}
 	return val
 }
