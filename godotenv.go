@@ -118,6 +118,17 @@ func Parse(r io.Reader) (envMap map[string]string, err error) {
 	return
 }
 
+// FetchEnv returns environment variable if is set but panic when isn't (fail fast approach)
+// Example usage:
+//		godotenv.FetchEnv("PORT")
+func FetchEnv(key string) string {
+	val := os.Getenv(key)
+	if val == "" {
+		panic("missing ENV variable")
+	}
+	return val
+}
+
 // Exec loads env vars from the specified filenames (empty map falls back to default)
 // then executes the cmd specified.
 //
