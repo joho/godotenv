@@ -217,8 +217,17 @@ func TestParsing(t *testing.T) {
 	// parses escaped double quotes
 	parseAndCompare(t, `FOO="escaped\"bar"`, "FOO", `escaped"bar`)
 
+	// parses single quotes inside double quotes
+	parseAndCompare(t, `FOO="'d'"`, "FOO", `'d'`)
+
 	// parses yaml style options
 	parseAndCompare(t, "OPTION_A: 1", "OPTION_A", "1")
+
+	//parses yaml values with equal signs
+	parseAndCompare(t, "OPTION_A: Foo=bar", "OPTION_A", "Foo=bar")
+
+	// parses non-yaml options with colons
+	parseAndCompare(t, "OPTION_A=1:B", "OPTION_A", "1:B")
 
 	// parses export keyword
 	parseAndCompare(t, "export OPTION_A=2", "OPTION_A", "2")
@@ -255,6 +264,15 @@ func TestParsing(t *testing.T) {
 	// expect(env("foo='ba#r'")).to eql('foo' => 'ba#r')
 	parseAndCompare(t, `FOO="ba#r"`, "FOO", "ba#r")
 	parseAndCompare(t, "FOO='ba#r'", "FOO", "ba#r")
+
+	//newlines and backslashes should be escaped
+	parseAndCompare(t, `FOO="bar\n\ b\az"`, "FOO", "bar\n baz")
+	parseAndCompare(t, `FOO="bar\\\n\ b\az"`, "FOO", "bar\\\n baz")
+	parseAndCompare(t, `FOO="bar\\r\ b\az"`, "FOO", "bar\\r baz")
+
+	parseAndCompare(t, `="value"`, "", "value")
+	parseAndCompare(t, `KEY="`, "KEY", "\"")
+	parseAndCompare(t, `KEY="value`, "KEY", "\"value")
 
 	// it 'throws an error if line format is incorrect' do
 	// expect{env('lol$wut')}.to raise_error(Dotenv::FormatError)

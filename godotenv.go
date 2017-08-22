@@ -19,6 +19,7 @@ import (
 	"io"
 	"os"
 	"os/exec"
+	"regexp"
 	"strings"
 )
 
@@ -203,11 +204,11 @@ func parseLine(line string) (key string, value string, err error) {
 		line = strings.Join(segmentsToKeep, "#")
 	}
 
-	// now split key from value
+	firstEquals := strings.Index(line, "=")
+	firstColon := strings.Index(line, ":")
 	splitString := strings.SplitN(line, "=", 2)
-
-	if len(splitString) != 2 {
-		// try yaml mode!
+	if firstColon != -1 && (firstColon < firstEquals || firstEquals == -1) {
+		//this is a yaml-style line
 		splitString = strings.SplitN(line, ":", 2)
 	}
 
@@ -224,27 +225,39 @@ func parseLine(line string) (key string, value string, err error) {
 	key = strings.Trim(key, " ")
 
 	// Parse the value
-	value = splitString[1]
+	value = parseValue(splitString[1])
+	return
+}
+
+func parseValue(value string) string {
 
 	// trim
 	value = strings.Trim(value, " ")
 
-	// check if we've got quoted values
-	if value != "" {
+	// check if we've got quoted values or possible escapes
+	if len(value) > 1 {
 		first := string(value[0:1])
 		last := string(value[len(value)-1:])
 		if first == last && strings.ContainsAny(first, `"'`) {
 			// pull the quotes off the edges
-			value = strings.Trim(value, `"'`)
-
-			// expand quotes
-			value = strings.Replace(value, `\"`, `"`, -1)
-			// expand newlines
-			value = strings.Replace(value, `\n`, "\n", -1)
+			value = value[1 : len(value)-1]
+			// handle escapes
+			escapeRegex := regexp.MustCompile(`\\.`)
+			value = escapeRegex.ReplaceAllStringFunc(value, func(match string) string {
+				c := strings.TrimPrefix(match, `\`)
+				switch c {
+				case "n":
+					return "\n"
+				case "r":
+					return "\r"
+				default:
+					return c
+				}
+			})
 		}
 	}
 
-	return
+	return value
 }
 
 func isIgnoredLine(line string) bool {
