@@ -1,4 +1,4 @@
-# GoDotEnv [![Build Status](https://travis-ci.org/joho/godotenv.svg?branch=master)](https://travis-ci.org/joho/godotenv) [![Build status](https://ci.appveyor.com/api/projects/status/9v40vnfvvgde64u4?svg=true)](https://ci.appveyor.com/project/joho/godotenv)
+# GoDotEnv [![Build Status](https://travis-ci.org/joho/godotenv.svg?branch=master)](https://travis-ci.org/joho/godotenv) [![Build status](https://ci.appveyor.com/api/projects/status/9v40vnfvvgde64u4?svg=true)](https://ci.appveyor.com/project/joho/godotenv) [![Go Report Card](https://goreportcard.com/badge/github.com/joho/godotenv)](https://goreportcard.com/report/github.com/joho/godotenv)
 
 A Go (golang) port of the Ruby dotenv project (which loads env vars from a .env file)
 
