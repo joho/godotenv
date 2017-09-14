@@ -122,8 +122,8 @@ func Parse(r io.Reader) (envMap map[string]string, err error) {
 	return
 }
 
-//ParseString reads an env file from a string, returning a map of keys and values.
-func ParseString(str string) (envMap map[string]string, err error) {
+//Unmarshal reads an env file from a string, returning a map of keys and values.
+func Unmarshal(str string) (envMap map[string]string, err error) {
 	return Parse(strings.NewReader(str))
 }
 
@@ -146,7 +146,7 @@ func Exec(filenames []string, cmd string, cmdArgs []string) error {
 
 // Write serializes the given environment and writes it to a file
 func Write(envMap map[string]string, filename string) error {
-	content, error := WriteString(envMap)
+	content, error := Marshal(envMap)
 	if error != nil {
 		return error
 	}
@@ -158,10 +158,9 @@ func Write(envMap map[string]string, filename string) error {
 	return err
 }
 
-// WriteString outputs the given environment as a dotenv-formatted environment file.
-//
+// Marshal outputs the given environment as a dotenv-formatted environment file.
 // Each line is in the format: KEY="VALUE" where VALUE is backslash-escaped.
-func WriteString(envMap map[string]string) (string, error) {
+func Marshal(envMap map[string]string) (string, error) {
 	lines := make([]string, 0, len(envMap))
 	for k, v := range envMap {
 		lines = append(lines, fmt.Sprintf(`%s="%s"`, k, doubleQuoteEscape(v)))

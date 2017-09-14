@@ -331,8 +331,8 @@ func TestErrorParsing(t *testing.T) {
 
 func TestWrite(t *testing.T) {
 	writeAndCompare := func(env string, expected string) {
-		envMap, _ := ParseString(env)
-		actual, _ := WriteString(envMap)
+		envMap, _ := Unmarshal(env)
+		actual, _ := Marshal(envMap)
 		if expected != actual {
 			t.Errorf("Expected '%v' (%v) to write as '%v', got '%v' instead.", env, envMap, expected, actual)
 		}
@@ -358,11 +358,11 @@ func TestRoundtrip(t *testing.T) {
 		if err != nil {
 			continue
 		}
-		rep, err := WriteString(env)
+		rep, err := Marshal(env)
 		if err != nil {
 			continue
 		}
-		roundtripped, err := ParseString(rep)
+		roundtripped, err := Unmarshal(rep)
 		if err != nil {
 			continue
 		}
