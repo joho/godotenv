@@ -351,20 +351,20 @@ func TestWrite(t *testing.T) {
 }
 
 func TestRoundtrip(t *testing.T) {
-	fixtures := []string{"equals.env", "exported.env", "invalid1.env", "plain.env", "quoted.env"}
+	fixtures := []string{"equals.env", "exported.env", "plain.env", "quoted.env"}
 	for _, fixture := range fixtures {
 		fixtureFilename := fmt.Sprintf("fixtures/%s", fixture)
 		env, err := readFile(fixtureFilename)
 		if err != nil {
-			continue
+			t.Errorf("Expected '%s' to read without error (%v)", fixtureFilename, err)
 		}
 		rep, err := Marshal(env)
 		if err != nil {
-			continue
+			t.Errorf("Expected '%s' to Marshal (%v)", fixtureFilename, err)
 		}
 		roundtripped, err := Unmarshal(rep)
 		if err != nil {
-			continue
+			t.Errorf("Expected '%s' to Mashal and Unmarshal (%v)", fixtureFilename, err)
 		}
 		if !reflect.DeepEqual(env, roundtripped) {
 			t.Errorf("Expected '%s' to roundtrip as '%v', got '%v' instead", fixtureFilename, env, roundtripped)
