@@ -21,6 +21,7 @@ import (
 	"os"
 	"os/exec"
 	"regexp"
+	"sort"
 	"strings"
 )
 
@@ -165,6 +166,7 @@ func Marshal(envMap map[string]string) (string, error) {
 	for k, v := range envMap {
 		lines = append(lines, fmt.Sprintf(`%s="%s"`, k, doubleQuoteEscape(v)))
 	}
+	sort.Strings(lines)
 	return strings.Join(lines, "\n"), nil
 }
 

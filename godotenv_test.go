@@ -348,6 +348,9 @@ func TestWrite(t *testing.T) {
 	writeAndCompare(`key=va'lu'e`, `key="va'lu'e"`)
 	// newlines, backslashes, and some other special chars are escaped
 	writeAndCompare(`foo="$ba\n\r\\r!"`, `foo="\$ba\n\r\\r\!"`)
+	// lines should be sorted
+	writeAndCompare("foo=bar\nbaz=buzz", "baz=\"buzz\"\nfoo=\"bar\"")
+
 }
 
 func TestRoundtrip(t *testing.T) {
