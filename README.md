@@ -103,6 +103,13 @@ reader := getRemoteFile()
 myEnv, err := godotenv.Parse(reader)
 ```
 
+... or from a `string` if you so desire
+
+```go
+content := getRemoteFileContent()
+myEnv, err := godotenv.Unmarshal(content)
+```
+
 ### Command Mode
 
 Assuming you've installed the command as above and you've got `$GOPATH/bin` in your `$PATH`
@@ -112,6 +119,22 @@ godotenv -f /some/path/to/.env some_command with some args
 ```
 
 If you don't specify `-f` it will fall back on the default of loading `.env` in `PWD`
+
+### Writing Env Files
+
+Godotenv can also write a map representing the environment to a correctly-formatted and escaped file
+
+```go
+env, err := godotenv.Unmarshal("KEY=value")
+err := godotenv.Write(env, "./.env")
+```
+
+... or to a string
+
+```go
+env, err := godotenv.Unmarshal("KEY=value")
+content, err := godotenv.Marshal(env)
+```
 
 ## Contributing
 
