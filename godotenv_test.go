@@ -193,6 +193,19 @@ func TestLoadQuotedEnv(t *testing.T) {
 	loadEnvAndCompareValues(t, Load, envFileName, expectedValues, noopPresets)
 }
 
+func TestSubstituitions(t *testing.T) {
+	envFileName := "fixtures/substitutions.env"
+	expectedValues := map[string]string{
+		"OPTION_A": "1",
+		"OPTION_B": "1",
+		"OPTION_C": "1",
+		"OPTION_D": "11",
+		"OPTION_E": "",
+	}
+
+	loadEnvAndCompareValues(t, Load, envFileName, expectedValues, noopPresets)
+}
+
 func TestActualEnvVarsAreLeftAlone(t *testing.T) {
 	os.Clearenv()
 	os.Setenv("OPTION_A", "actualenv")
