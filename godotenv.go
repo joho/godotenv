@@ -123,6 +123,14 @@ func Parse(r io.Reader) (envMap map[string]string, err error) {
 	return
 }
 
+// Lookup env variable and if it does not exist then return the "default"/fallback value
+func GetEnv(key, fallback string) string {
+    if value, ok := os.LookupEnv(key); ok {
+        return value
+    }
+    return fallback
+}
+
 //Unmarshal reads an env file from a string, returning a map of keys and values.
 func Unmarshal(str string) (envMap map[string]string, err error) {
 	return Parse(strings.NewReader(str))
