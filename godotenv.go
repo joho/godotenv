@@ -112,7 +112,7 @@ func Parse(r io.Reader) (envMap map[string]string, err error) {
 	for _, fullLine := range lines {
 		if !isIgnoredLine(fullLine) {
 			var key, value string
-			key, value, err = parseLine(fullLine)
+			key, value, err = parseLine(fullLine, envMap)
 
 			if err != nil {
 				return
@@ -209,7 +209,7 @@ func readFile(filename string) (envMap map[string]string, err error) {
 	return Parse(file)
 }
 
-func parseLine(line string) (key string, value string, err error) {
+func parseLine(line string, envMap map[string]string) (key string, value string, err error) {
 	if len(line) == 0 {
 		err = errors.New("zero length string")
 		return
@@ -259,11 +259,11 @@ func parseLine(line string) (key string, value string, err error) {
 	key = strings.Trim(key, " ")
 
 	// Parse the value
-	value = parseValue(splitString[1])
+	value = parseValue(splitString[1], envMap)
 	return
 }
 
-func parseValue(value string) string {
+func parseValue(value string, envMap map[string]string) string {
 
 	// trim
 	value = strings.Trim(value, " ")
@@ -291,6 +291,13 @@ func parseValue(value string) string {
 		}
 	}
 
+	// expand variables
+	value = os.Expand(value, func(key string) string {
+		if val, ok := envMap[key]; ok {
+			return val
+		}
+		return ""
+	})
 	return value
 }
 
