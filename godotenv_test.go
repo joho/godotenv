@@ -206,6 +206,15 @@ func TestSubstituitions(t *testing.T) {
 	loadEnvAndCompareValues(t, Load, envFileName, expectedValues, noopPresets)
 }
 
+func TestEmbedCmd(t *testing.T) {
+	envFileName := "fixtures/embed_cmd.env"
+	expectedValues := map[string]string{
+		"OPTION_A": "123",
+	}
+
+	loadEnvAndCompareValues(t, Load, envFileName, expectedValues, noopPresets)
+}
+
 func TestActualEnvVarsAreLeftAlone(t *testing.T) {
 	os.Clearenv()
 	os.Setenv("OPTION_A", "actualenv")
