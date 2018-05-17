@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 	"reflect"
-	"runtime/internal/sys"
+	"runtime"
 	"testing"
 )
 
@@ -209,7 +209,7 @@ func TestSubstituitions(t *testing.T) {
 
 func TestEmbedCmd(t *testing.T) {
 	// NOT works on windows
-	if sys.GoosWindows == 0 {
+	if runtime.GOOS != "windows" {
 		envFileName := "fixtures/embed_cmd.env"
 		expectedValues := map[string]string{
 			"OPTION_A": "123",
