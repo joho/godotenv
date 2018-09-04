@@ -299,7 +299,13 @@ func parseValue(value string, envMap map[string]string) string {
 		if val, ok := os.LookupEnv(key); ok {
 			return val
 		}
-		return ""
+
+		// variable is not defined - return the key as it was
+		if withBrackets := fmt.Sprintf("${%s}", key); strings.Contains(value, withBrackets) {
+			return withBrackets
+		} else {
+			return fmt.Sprintf("$%s", key)
+		}
 	})
 	return value
 }

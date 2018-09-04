@@ -200,7 +200,7 @@ func TestSubstituitions(t *testing.T) {
 		"OPTION_B": "1",
 		"OPTION_C": "1",
 		"OPTION_D": "11",
-		"OPTION_E": "",
+		"OPTION_E": "${OPTION_NOT_DEFINED}",
 	}
 
 	loadEnvAndCompareValues(t, Load, envFileName, expectedValues, noopPresets)
@@ -217,6 +217,7 @@ func TestActualEnvVarsAreLeftAlone(t *testing.T) {
 }
 
 func TestParsing(t *testing.T) {
+	parseAndCompare(t, "FOO=Heyyyy$$", "FOO", "Heyyyy$$")
 	// unquoted values
 	parseAndCompare(t, "FOO=bar", "FOO", "bar")
 
