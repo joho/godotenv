@@ -270,12 +270,19 @@ func parseValue(value string, envMap map[string]string) string {
 
 	// check if we've got quoted values or possible escapes
 	if len(value) > 1 {
-		first := string(value[0:1])
-		last := string(value[len(value)-1:])
-		if first == last && strings.ContainsAny(first, `"'`) {
+		rs := regexp.MustCompile(`\A'(.*)'\z`)
+		singleQuotes := rs.FindStringSubmatch(value)
+
+		rd := regexp.MustCompile(`\A"(.*)"\z`)
+		doubleQuotes := rd.FindStringSubmatch(value)
+
+		if singleQuotes != nil || doubleQuotes != nil {
 			// pull the quotes off the edges
 			value = value[1 : len(value)-1]
-			// handle escapes
+		}
+
+		if doubleQuotes != nil {
+			// expand newlines
 			escapeRegex := regexp.MustCompile(`\\.`)
 			value = escapeRegex.ReplaceAllStringFunc(value, func(match string) string {
 				c := strings.TrimPrefix(match, `\`)
@@ -285,23 +292,38 @@ func parseValue(value string, envMap map[string]string) string {
 				case "r":
 					return "\r"
 				default:
-					return c
+					return match
 				}
 			})
+			// unescape characters
+			e := regexp.MustCompile(`\\([^$])`)
+			value = e.ReplaceAllString(value, "$1")
+		}
+
+		if singleQuotes == nil {
+			value = expandVariables(value, envMap)
 		}
 	}
 
-	// expand variables
-	value = os.Expand(value, func(key string) string {
-		if val, ok := envMap[key]; ok {
-			return val
-		}
-		if val, ok := os.LookupEnv(key); ok {
-			return val
-		}
-		return ""
-	})
 	return value
+}
+
+func expandVariables(v string, m map[string]string) string {
+	r := regexp.MustCompile(`(\\)?(\$)(\()?\{?([A-Z0-9_]+)?\}?`)
+
+	return r.ReplaceAllStringFunc(v, func(s string) string {
+		submatch := r.FindStringSubmatch(s)
+
+		if submatch == nil {
+			return s
+		}
+		if submatch[1] == "\\" || submatch[2] == "(" {
+			return submatch[0][1:]
+		} else if submatch[4] != "" {
+			return m[submatch[4]]
+		}
+		return s
+	})
 }
 
 func isIgnoredLine(line string) bool {
