@@ -5,14 +5,14 @@ import (
 	"fmt"
 	"os"
 	"reflect"
-	"testing"
 	"strings"
+	"testing"
 )
 
 var noopPresets = make(map[string]string)
 
 func parseAndCompare(t *testing.T, rawEnvLine string, expectedKey string, expectedValue string) {
-	key, value, _ := parseLine(rawEnvLine, noopPresets)
+	key, value, _, _ := parseLine(rawEnvLine, noopPresets, false)
 	if key != expectedKey || value != expectedValue {
 		t.Errorf("Expected '%v' to parse as '%v' => '%v', got '%v' => '%v' instead", rawEnvLine, expectedKey, expectedValue, key, value)
 	}
@@ -194,6 +194,19 @@ func TestLoadQuotedEnv(t *testing.T) {
 	loadEnvAndCompareValues(t, Load, envFileName, expectedValues, noopPresets)
 }
 
+func TestMultilineEnv(t *testing.T) {
+	envFileName := "fixtures/multiline.env"
+	expectedValues := map[string]string{
+		"SINGLE_LINE": "Single Line Value",
+		"MULTI_LINE": `This is a
+multiline value
+should be properly parsed`,
+		"SINGLE_LINE_2": "Another single line",
+	}
+
+	loadEnvAndCompareValues(t, Load, envFileName, expectedValues, noopPresets)
+}
+
 func TestSubstitutions(t *testing.T) {
 	envFileName := "fixtures/substitutions.env"
 	expectedValues := map[string]string{
@@ -358,7 +371,7 @@ func TestParsing(t *testing.T) {
 	// it 'throws an error if line format is incorrect' do
 	// expect{env('lol$wut')}.to raise_error(Dotenv::FormatError)
 	badlyFormattedLine := "lol$wut"
-	_, _, err := parseLine(badlyFormattedLine, noopPresets)
+	_, _, _, err := parseLine(badlyFormattedLine, noopPresets, false)
 	if err == nil {
 		t.Errorf("Expected \"%v\" to return error, but it didn't", badlyFormattedLine)
 	}
