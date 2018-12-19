@@ -429,6 +429,14 @@ func TestErrorParsingMultiline(t *testing.T) {
 	}
 }
 
+func TestErrorParsingMultilineLastValue(t *testing.T) {
+	envFileName := "fixtures/invalid3.env"
+	envMap, err := Read(envFileName)
+	if err == nil {
+		t.Errorf("Expected error, got %v", envMap)
+	}
+}
+
 func TestWrite(t *testing.T) {
 	writeAndCompare := func(env string, expected string) {
 		envMap, _ := Unmarshal(env)
