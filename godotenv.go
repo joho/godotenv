@@ -109,17 +109,60 @@ func Parse(r io.Reader) (envMap map[string]string, err error) {
 		return
 	}
 
+	var multilineKey, buffer string
+	multilineValue := false
 	for _, fullLine := range lines {
 		if !isIgnoredLine(fullLine) {
 			var key, value string
-			key, value, err = parseLine(fullLine, envMap)
+			var isMultilineValue bool
+			key, value, isMultilineValue, err = parseLine(fullLine, envMap, multilineValue)
 
 			if err != nil {
 				return
 			}
-			envMap[key] = value
+
+			// Previous multi-line value was not closed. We shouldn't find new keys until closing the multi-line value
+			if isMultilineValue && len(multilineKey) > 0 && len(key) > 0 {
+				err = fmt.Errorf("Multiline value for key %s reached key %s without closing the single quotes", multilineKey, key)
+				return
+			}
+
+			if multilineValue == true && isMultilineValue == false && len(key) <= 0 {
+				// We are on a multi-line; but last line closed the multi-line single quote
+				value = fmt.Sprintf("%s\n%s", buffer, value)
+				value = value[0 : len(value)-1] // Drop last single quote
+				key = multilineKey
+			}
+
+			if !isMultilineValue {
+				envMap[key] = value
+				buffer = ""
+				multilineKey = ""
+				multilineValue = false
+			} else {
+				if len(multilineKey) == 0 { // Store the multi-line key for future usage
+					multilineKey = key
+				}
+				if len(buffer) == 0 {
+					buffer = value
+				} else {
+					buffer = fmt.Sprintf("%s\n%s", buffer, value)
+				}
+			}
+			multilineValue = isMultilineValue
 		}
 	}
+
+	// We had a multi-line value and we reached the end of the file; let's add it to the map
+	if len(multilineKey) > 0 && len(buffer) > 0 {
+		// We have reached the end of the file and never closed the multi-line value.
+		if multilineValue {
+			err = fmt.Errorf("Multiline value for key %s was never closed (ending single quote not found)", multilineKey)
+			return
+		}
+		envMap[multilineKey] = buffer
+	}
+
 	return
 }
 
@@ -209,7 +252,7 @@ func readFile(filename string) (envMap map[string]string, err error) {
 	return Parse(file)
 }
 
-func parseLine(line string, envMap map[string]string) (key string, value string, err error) {
+func parseLine(line string, envMap map[string]string, isMultiline bool) (key string, value string, multilineValue bool, err error) {
 	if len(line) == 0 {
 		err = errors.New("zero length string")
 		return
@@ -218,7 +261,7 @@ func parseLine(line string, envMap map[string]string) (key string, value string,
 	// ditch the comments (but keep quoted hashes)
 	if strings.Contains(line, "#") {
 		segmentsBetweenHashes := strings.Split(line, "#")
-		quotesAreOpen := false
+		quotesAreOpen := isMultiline
 		var segmentsToKeep []string
 		for _, segment := range segmentsBetweenHashes {
 			if strings.Count(segment, "\"") == 1 || strings.Count(segment, "'") == 1 {
@@ -236,6 +279,7 @@ func parseLine(line string, envMap map[string]string) (key string, value string,
 		}
 
 		line = strings.Join(segmentsToKeep, "#")
+		multilineValue = quotesAreOpen
 	}
 
 	firstEquals := strings.Index(line, "=")
@@ -246,20 +290,38 @@ func parseLine(line string, envMap map[string]string) (key string, value string,
 		splitString = strings.SplitN(line, ":", 2)
 	}
 
-	if len(splitString) != 2 {
+	// Only check key, value pair if is not a multi-line value
+	if isMultiline == false && len(splitString) != 2 {
 		err = errors.New("Can't separate key from value")
 		return
 	}
 
-	// Parse the key
-	key = splitString[0]
-	if strings.HasPrefix(key, "export") {
-		key = strings.TrimPrefix(key, "export")
+	if len(splitString) == 2 {
+		// Parse the key
+		key = splitString[0]
+		if strings.HasPrefix(key, "export") {
+			key = strings.TrimPrefix(key, "export")
+		}
+		key = strings.Trim(key, " ")
 	}
-	key = strings.Trim(key, " ")
 
-	// Parse the value
-	value = parseValue(splitString[1], envMap)
+	if !isMultiline {
+		// Parse the value
+		value = parseValue(splitString[1], envMap)
+		if len(value) <= 0 {
+			return
+		}
+
+		// Multi-line delimiting character is a single quote '
+		if multilineValue = (value[0:1] == "'" && value[len(value)-1:] != "'"); multilineValue == true {
+			value = value[1:len(value)]
+		}
+	} else {
+		value = parseValue(splitString[0], envMap)
+		// Check if we reached the end of the multi-line value
+		multilineValue = value[len(value)-1:] != "'"
+	}
+
 	return
 }
 
