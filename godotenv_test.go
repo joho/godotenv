@@ -28,7 +28,7 @@ func loadEnvAndCompareValues(t *testing.T, loader func(files ...string) error, e
 
 	err := loader(envFileName)
 	if err != nil {
-		t.Fatalf("Error loading %v", envFileName)
+		t.Fatalf("Error loading %v. +%v", envFileName, err)
 	}
 
 	for k := range expectedValues {
@@ -199,7 +199,7 @@ func TestMultilineEnv(t *testing.T) {
 	expectedValues := map[string]string{
 		"SINGLE_LINE": "Single Line Value",
 		"MULTI_LINE": `This is a
-multiline value
+multiline value = not breaking the line
 should be properly parsed`,
 		"SINGLE_LINE_2": "Another single line",
 	}
@@ -366,7 +366,7 @@ func TestParsing(t *testing.T) {
 
 	parseAndCompare(t, `="value"`, "", "value")
 	parseAndCompare(t, `KEY="`, "KEY", "\"")
-	parseAndCompare(t, `KEY="value`, "KEY", "\"value")
+	parseAndCompare(t, `KEY="value`, "KEY", "value")
 
 	// it 'throws an error if line format is incorrect' do
 	// expect{env('lol$wut')}.to raise_error(Dotenv::FormatError)

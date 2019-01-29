@@ -121,12 +121,6 @@ func Parse(r io.Reader) (envMap map[string]string, err error) {
 				return
 			}
 
-			// Previous multi-line value was not closed. We shouldn't find new keys until closing the multi-line value
-			if isMultilineValue && len(multilineKey) > 0 && len(key) > 0 {
-				err = fmt.Errorf("Multiline value for key %s reached key %s without closing the single quotes", multilineKey, key)
-				return
-			}
-
 			if multilineValue == true && isMultilineValue == false && len(key) <= 0 {
 				// We are on a multi-line; but last line closed the multi-line single quote
 				value = fmt.Sprintf("%s\n%s", buffer, value)
@@ -282,44 +276,44 @@ func parseLine(line string, envMap map[string]string, isMultiline bool) (key str
 		multilineValue = quotesAreOpen
 	}
 
-	firstEquals := strings.Index(line, "=")
-	firstColon := strings.Index(line, ":")
-	splitString := strings.SplitN(line, "=", 2)
-	if firstColon != -1 && (firstColon < firstEquals || firstEquals == -1) {
-		//this is a yaml-style line
-		splitString = strings.SplitN(line, ":", 2)
-	}
-
-	// Only check key, value pair if is not a multi-line value
-	if isMultiline == false && len(splitString) != 2 {
-		err = errors.New("Can't separate key from value")
-		return
-	}
-
-	if len(splitString) == 2 {
-		// Parse the key
-		key = splitString[0]
-		if strings.HasPrefix(key, "export") {
-			key = strings.TrimPrefix(key, "export")
-		}
-		key = strings.Trim(key, " ")
-	}
-
 	if !isMultiline {
+		firstEquals := strings.Index(line, "=")
+		firstColon := strings.Index(line, ":")
+		splitString := strings.SplitN(line, "=", 2)
+		if firstColon != -1 && (firstColon < firstEquals || firstEquals == -1) {
+			//this is a yaml-style line
+			splitString = strings.SplitN(line, ":", 2)
+		}
+
+		// Only check key, value pair if is not a multi-line value
+		if isMultiline == false && len(splitString) != 2 {
+			err = errors.New("Can't separate key from value")
+			return
+		}
+
+		if len(splitString) == 2 {
+			// Parse the key
+			key = splitString[0]
+			if strings.HasPrefix(key, "export") {
+				key = strings.TrimPrefix(key, "export")
+			}
+			key = strings.Trim(key, " ")
+		}
+
 		// Parse the value
 		value = parseValue(splitString[1], envMap)
 		if len(value) <= 0 {
 			return
 		}
 
-		// Multi-line delimiting character is a single quote '
-		if multilineValue = (value[0:1] == "'" && value[len(value)-1:] != "'"); multilineValue == true {
+		// Multi-line delimiting character is a double quote "
+		if multilineValue = (value[0:1] == "\"" && value[len(value)-1:] != "\""); multilineValue == true {
 			value = value[1:len(value)]
 		}
 	} else {
-		value = parseValue(splitString[0], envMap)
+		value = parseValue(line, envMap)
 		// Check if we reached the end of the multi-line value
-		multilineValue = value[len(value)-1:] != "'"
+		multilineValue = value[len(value)-1:] != "\""
 	}
 
 	return
