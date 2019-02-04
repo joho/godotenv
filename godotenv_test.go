@@ -313,6 +313,13 @@ func TestParsing(t *testing.T) {
 	// parses export keyword
 	parseAndCompare(t, "export OPTION_A=2", "OPTION_A", "2")
 	parseAndCompare(t, `export OPTION_B='\n'`, "OPTION_B", "\\n")
+	parseAndCompare(t, "export exportFoo=2", "exportFoo", "2")
+	parseAndCompare(t, "exportFOO=2", "exportFOO", "2")
+	parseAndCompare(t, "export_FOO =2", "export_FOO", "2")
+	parseAndCompare(t, "export.FOO= 2", "export.FOO", "2")
+	parseAndCompare(t, "export\tOPTION_A=2", "OPTION_A", "2")
+	parseAndCompare(t, "  export OPTION_A=2", "OPTION_A", "2")
+	parseAndCompare(t, "\texport OPTION_A=2", "OPTION_A", "2")
 
 	// it 'expands newlines in quoted strings' do
 	// expect(env('FOO="bar\nbaz"')).to eql('FOO' => "bar\nbaz")
