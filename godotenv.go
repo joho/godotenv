@@ -252,11 +252,8 @@ func parseLine(line string, envMap map[string]string) (key string, value string,
 	}
 
 	// Parse the key
-	key = splitString[0]
-	if strings.HasPrefix(key, "export") {
-		key = strings.TrimPrefix(key, "export")
-	}
-	key = strings.Trim(key, " ")
+	re := regexp.MustCompile(`^\s*(?:export\s+)?(.*?)\s*$`)
+	key = re.ReplaceAllString(splitString[0], "$1")
 
 	// Parse the value
 	value = parseValue(splitString[1], envMap)
