@@ -310,13 +310,17 @@ func parseLine(line string, envMap map[string]string, isMultiline bool) (key str
 		if multilineValue = (value[0:1] == "\"" && value[len(value)-1:] != "\""); multilineValue == true {
 			value = value[1:len(value)]
 		}
+    
+    key = strings.TrimSpace(key)
+    re := regexp.MustCompile(`^\s*(?:export\s+)?(.*?)\s*$`)
+	  key = re.ReplaceAllString(splitString[0], "$1")
 	} else {
 		value = parseValue(line, envMap)
 		// Check if we reached the end of the multi-line value
 		multilineValue = value[len(value)-1:] != "\""
 	}
 
-	return
+  return
 }
 
 func parseValue(value string, envMap map[string]string) string {
@@ -383,7 +387,7 @@ func expandVariables(v string, m map[string]string) string {
 }
 
 func isIgnoredLine(line string) bool {
-	trimmedLine := strings.Trim(line, " \n\t")
+	trimmedLine := strings.TrimSpace(line)
 	return len(trimmedLine) == 0 || strings.HasPrefix(trimmedLine, "#")
 }
 
