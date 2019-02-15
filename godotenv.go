@@ -27,6 +27,16 @@ import (
 
 const doubleQuoteSpecialChars = "\\\n\r\"!$`"
 
+var shouldParseEmbed bool = false
+
+func EnableEmbed() {
+	shouldParseEmbed = true
+}
+
+func DisableEmbed() {
+	shouldParseEmbed = false
+}
+
 // Load will read your env file(s) and load them into ENV for this process.
 //
 // Call this function as close as possible to the start of your program (ideally in main)
@@ -292,11 +302,13 @@ func parseValue(value string, envMap map[string]string) string {
 	}
 
 	// embed commands
-	if strings.HasPrefix(value, "$(") && strings.HasSuffix(value, ")") {
-		cmdStr := value[2 : len(value)-1]
-		cmd := exec.Command("/bin/sh", "-c", cmdStr)
-		out, _ := cmd.Output()
-		value = strings.Trim(string(out), " \n\t")
+	if shouldParseEmbed {
+		if strings.HasPrefix(value, "$(") && strings.HasSuffix(value, ")") {
+			cmdStr := value[2 : len(value)-1]
+			cmd := exec.Command("/bin/sh", "-c", cmdStr)
+			out, _ := cmd.Output()
+			value = strings.Trim(string(out), " \n\t")
+		}
 	}
 
 	// expand variables

@@ -214,7 +214,8 @@ func TestEmbedCmd(t *testing.T) {
 		expectedValues := map[string]string{
 			"OPTION_A": "123",
 		}
-
+		EnableEmbed()
+		defer DisableEmbed()
 		loadEnvAndCompareValues(t, Load, envFileName, expectedValues, noopPresets)
 	}
 }
