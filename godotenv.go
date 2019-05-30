@@ -50,6 +50,28 @@ func Load(filenames ...string) (err error) {
 	return
 }
 
+// LoadString will read your string like env file(s) and load them into ENV for this process.
+//
+// Call this function as close as possible to the start of your program (ideally in main)
+//
+// You can to override an env variable if you want using overload value.
+func LoadString(envString string, overload bool) (err error) {
+	currentEnv := map[string]bool{}
+	rawEnv := os.Environ()
+	for _, rawEnvLine := range rawEnv {
+		key := strings.Split(rawEnvLine, "=")[0]
+		currentEnv[key] = true
+	}
+
+	loadedEnv, _ := Unmarshal(envString)
+	for key, value := range loadedEnv {
+		if !currentEnv[key] || overload {
+			os.Setenv(key, value)
+		}
+	}
+	return
+}
+
 // Overload will read your env file(s) and load them into ENV for this process.
 //
 // Call this function as close as possible to the start of your program (ideally in main)
@@ -258,7 +280,7 @@ func parseLine(line string, envMap map[string]string) (key string, value string,
 	}
 	key = strings.TrimSpace(key)
 
-  re := regexp.MustCompile(`^\s*(?:export\s+)?(.*?)\s*$`)
+	re := regexp.MustCompile(`^\s*(?:export\s+)?(.*?)\s*$`)
 	key = re.ReplaceAllString(splitString[0], "$1")
 
 	// Parse the value
