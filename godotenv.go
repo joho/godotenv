@@ -19,7 +19,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"os/exec"
 	"regexp"
 	"sort"
 	"strings"
@@ -138,11 +137,7 @@ func Unmarshal(str string) (envMap map[string]string, err error) {
 func Exec(filenames []string, cmd string, cmdArgs []string) error {
 	Load(filenames...)
 
-	command := exec.Command(cmd, cmdArgs...)
-	command.Stdin = os.Stdin
-	command.Stdout = os.Stdout
-	command.Stderr = os.Stderr
-	return command.Run()
+	return execv(cmd, cmdArgs)
 }
 
 // Write serializes the given environment and writes it to a file
@@ -258,7 +253,7 @@ func parseLine(line string, envMap map[string]string) (key string, value string,
 	}
 	key = strings.TrimSpace(key)
 
-  re := regexp.MustCompile(`^\s*(?:export\s+)?(.*?)\s*$`)
+	re := regexp.MustCompile(`^\s*(?:export\s+)?(.*?)\s*$`)
 	key = re.ReplaceAllString(splitString[0], "$1")
 
 	// Parse the value
