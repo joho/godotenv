@@ -110,31 +110,6 @@ content := getRemoteFileContent()
 myEnv, err := godotenv.Unmarshal(content)
 ```
 
-### Precendence & Conventions
-
-Existing envs take precendence of envs that are loaded later.
-
-The [convention](https://github.com/bkeepers/dotenv#what-other-env-files-can-i-use)
-for managing multiple environments (i.e. development, test, production)
-is to create an env named `{YOURAPP}_ENV` and load envs in this order:
-
-```go
-env := os.Getenv("FOO_ENV")
-if "" == env {
-  env = "development"
-}
-
-godotenv.Load(".env." + env + ".local")
-if "test" != env {
-  godotenv.Load(".env.local")
-}
-godotenv.Load(".env." + env)
-godotenv.Load() // The Original .env
-```
-
-If you need to, you can also use `godotenv.Overload()` to defy this convention
-and overwrite existing envs instead of only supplanting them. Use with caution.
-
 ### Command Mode
 
 Assuming you've installed the command as above and you've got `$GOPATH/bin` in your `$PATH`
