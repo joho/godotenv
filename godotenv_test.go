@@ -362,11 +362,6 @@ func TestParsing(t *testing.T) {
 	parseAndCompare(t, `KEY="`, "KEY", "\"")
 	parseAndCompare(t, `KEY="value`, "KEY", "\"value")
 
-	// leading whitespace should be ignored
-	parseAndCompare(t, " KEY =value", "KEY", "value")
-	parseAndCompare(t, "   KEY=value", "KEY", "value")
-	parseAndCompare(t, "\tKEY=value", "KEY", "value")
-
 	// it 'throws an error if line format is incorrect' do
 	// expect{env('lol$wut')}.to raise_error(Dotenv::FormatError)
 	badlyFormattedLine := "lol$wut"
@@ -381,10 +376,6 @@ func TestLinesToIgnore(t *testing.T) {
 	// expect(env("\n \t  \nfoo=bar\n \nfizz=buzz")).to eql('foo' => 'bar', 'fizz' => 'buzz')
 	if !isIgnoredLine("\n") {
 		t.Error("Line with nothing but line break wasn't ignored")
-	}
-
-	if !isIgnoredLine("\r\n") {
-		t.Error("Line with nothing but windows-style line break wasn't ignored")
 	}
 
 	if !isIgnoredLine("\t\t ") {
