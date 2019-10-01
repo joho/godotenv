@@ -19,7 +19,7 @@ func main() {
 	flag.Parse()
 
 	usage := `
-Run a process with an env setup from a .env file
+Run a process with a env setup from a .env file
 
 godotenv [-f ENV_FILE_PATHS] COMMAND_ARGS
 
