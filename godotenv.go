@@ -258,7 +258,7 @@ func parseLine(line string, envMap map[string]string) (key string, value string,
 	}
 	key = strings.TrimSpace(key)
 
-  re := regexp.MustCompile(`^\s*(?:export\s+)?(.*?)\s*$`)
+	re := regexp.MustCompile(`^\s*(?:export\s+)?(.*?)\s*$`)
 	key = re.ReplaceAllString(splitString[0], "$1")
 
 	// Parse the value
@@ -323,7 +323,10 @@ func expandVariables(v string, m map[string]string) string {
 		if submatch[1] == "\\" || submatch[2] == "(" {
 			return submatch[0][1:]
 		} else if submatch[4] != "" {
-			return m[submatch[4]]
+			if v, ok := m[submatch[4]]; ok {
+				return v
+			}
+			return os.Getenv(submatch[4])
 		}
 		return s
 	})

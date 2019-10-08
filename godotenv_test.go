@@ -208,6 +208,8 @@ func TestSubstitutions(t *testing.T) {
 }
 
 func TestExpanding(t *testing.T) {
+	os.Setenv("BAZ", "testbaz")
+
 	tests := []struct {
 		name     string
 		input    string
@@ -252,6 +254,11 @@ func TestExpanding(t *testing.T) {
 			"does not expand escaped variables",
 			"FOO=test\nBAR=\"foo\\${FOO} ${FOO}\"",
 			map[string]string{"FOO": "test", "BAR": "foo${FOO} test"},
+		},
+		{
+			"expands variables with existing ones",
+			"FOO=$BAZ\nBAZ=baz$BAZ\nBAR=$BAZ",
+			map[string]string{"FOO": "testbaz", "BAZ": "baztestbaz", "BAR": "baztestbaz"},
 		},
 	}
 
