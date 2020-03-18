@@ -219,6 +219,11 @@ func TestExpanding(t *testing.T) {
 			map[string]string{"FOO": "test", "BAR": "test"},
 		},
 		{
+			"expands variables found in dot values",
+			"FOO.BAR=test\nFOO2=${FOO.BAR}",
+			map[string]string{"FOO.BAR": "test", "FOO2": "test"},
+		},
+		{
 			"parses variables wrapped in brackets",
 			"FOO=test\nBAR=${FOO}bar",
 			map[string]string{"FOO": "test", "BAR": "testbar"},

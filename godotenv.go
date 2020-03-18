@@ -320,7 +320,7 @@ func parseValue(value string, envMap map[string]string) string {
 	return value
 }
 
-var expandVarRegex = regexp.MustCompile(`(\\)?(\$)(\()?\{?([A-Z0-9_]+)?\}?`)
+var expandVarRegex = regexp.MustCompile(`(\\)?(\$)(\()?\{?([A-Z\.0-9_]+)?\}?`)
 
 func expandVariables(v string, m map[string]string) string {
 	return expandVarRegex.ReplaceAllStringFunc(v, func(s string) string {
