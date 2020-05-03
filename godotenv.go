@@ -50,6 +50,32 @@ func Load(filenames ...string) (err error) {
 	return
 }
 
+// LoadOpt will *optionally* read your env file(s) and load them into ENV for this process.
+//
+// Call this function as close as possible to the start of your program (ideally in main)
+//
+// Loading a file which does not exists will not result in an error
+//
+// If you call LoadOpt without any args it will default to loading .env in the current path
+//
+// You can otherwise tell it which files to load (there can be more than one) like
+//
+//		godotenv.LoadOpt("fileone", "filetwo")
+//
+// It's important to note that it WILL NOT OVERRIDE an env variable that already exists - consider the .env file to set dev vars or sensible defaults
+func LoadOpt(filenames ...string) (err error) {
+	filenames = filenamesOrDefault(filenames)
+
+	for _, filename := range filenames {
+		err = loadFile(filename, false)
+		if errors.Is(err, os.ErrNotExist) || err == nil {
+			continue
+		}
+		return err
+	}
+	return nil
+}
+
 // Overload will read your env file(s) and load them into ENV for this process.
 //
 // Call this function as close as possible to the start of your program (ideally in main)
@@ -71,6 +97,32 @@ func Overload(filenames ...string) (err error) {
 		}
 	}
 	return
+}
+
+// OverloadOpt will *optionally* read your env file(s) and load them into ENV for this process.
+//
+// Call this function as close as possible to the start of your program (ideally in main)
+//
+// Loading a file which does not exists will not result in an error
+//
+// If you call OverloadOpt without any args it will default to loading .env in the current path
+//
+// You can otherwise tell it which files to load (there can be more than one) like
+//
+//		godotenv.OverloadOpt("fileone", "filetwo")
+//
+// It's important to note this WILL OVERRIDE an env variable that already exists - consider the .env file to forcefilly set all vars.
+func OverloadOpt(filenames ...string) (err error) {
+	filenames = filenamesOrDefault(filenames)
+
+	for _, filename := range filenames {
+		err = loadFile(filename, true)
+		if errors.Is(err, os.ErrNotExist) || err == nil {
+			continue
+		}
+		return err
+	}
+	return nil
 }
 
 // Read all env (with same file loading semantics as Load) but return values as
