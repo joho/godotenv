@@ -470,3 +470,31 @@ func TestRoundtrip(t *testing.T) {
 
 	}
 }
+
+func TestLoadOptWithNoArgs(t *testing.T) {
+	err := LoadOpt(".idnotexist")
+	if err != nil {
+		t.Errorf("Expected '%s' to ignore file '%v' which doesn't exist", "LoadOpt", ".idnotexist")
+	}
+}
+
+func TestLoadOptWithParsingError(t *testing.T) {
+	err := LoadOpt("fixtures/invalid1.env")
+	if err == nil {
+		t.Errorf("Expected '%s' to handle '%v' error", "LoadOpt", "Can't separate key from value")
+	}
+}
+
+func TestOverloadOptOptWithNoArgs(t *testing.T) {
+	err := OverloadOpt(".idnotexist")
+	if err != nil {
+		t.Errorf("Expected '%s' to ignore file '%v' which doesn't exist", "OverloadOpt", ".idnotexist")
+	}
+}
+
+func TestOverloadOptWithParsingError(t *testing.T) {
+	err := OverloadOpt("fixtures/invalid1.env")
+	if err == nil {
+		t.Errorf("Expected '%s' to handle '%v' error", "OverloadOpt", "Can't separate key from value")
+	}
+}
