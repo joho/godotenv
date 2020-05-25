@@ -80,7 +80,7 @@ func Read(filenames ...string) (envMap map[string]string, err error) {
 	envMap = make(map[string]string)
 
 	for _, filename := range filenames {
-		individualEnvMap, individualErr := readFile(filename)
+		individualEnvMap, individualErr := readFile(filename, false)
 
 		if individualErr != nil {
 			err = individualErr
@@ -97,6 +97,10 @@ func Read(filenames ...string) (envMap map[string]string, err error) {
 
 // Parse reads an env file from io.Reader, returning a map of keys and values.
 func Parse(r io.Reader) (envMap map[string]string, err error) {
+	return parse(r, false)
+}
+
+func parse(r io.Reader, overload bool) (envMap map[string]string, err error) {
 	envMap = make(map[string]string)
 
 	var lines []string
@@ -112,7 +116,7 @@ func Parse(r io.Reader) (envMap map[string]string, err error) {
 	for _, fullLine := range lines {
 		if !isIgnoredLine(fullLine) {
 			var key, value string
-			key, value, err = parseLine(fullLine, envMap)
+			key, value, err = parseLine(fullLine, envMap, overload)
 
 			if err != nil {
 				return
@@ -183,7 +187,7 @@ func filenamesOrDefault(filenames []string) []string {
 }
 
 func loadFile(filename string, overload bool) error {
-	envMap, err := readFile(filename)
+	envMap, err := readFile(filename, overload)
 	if err != nil {
 		return err
 	}
@@ -204,19 +208,19 @@ func loadFile(filename string, overload bool) error {
 	return nil
 }
 
-func readFile(filename string) (envMap map[string]string, err error) {
+func readFile(filename string, overload bool) (envMap map[string]string, err error) {
 	file, err := os.Open(filename)
 	if err != nil {
 		return
 	}
 	defer file.Close()
 
-	return Parse(file)
+	return parse(file, overload)
 }
 
 var exportRegex = regexp.MustCompile(`^\s*(?:export\s+)?(.*?)\s*$`)
 
-func parseLine(line string, envMap map[string]string) (key string, value string, err error) {
+func parseLine(line string, envMap map[string]string, overload bool) (key string, value string, err error) {
 	if len(line) == 0 {
 		err = errors.New("zero length string")
 		return
@@ -268,7 +272,7 @@ func parseLine(line string, envMap map[string]string) (key string, value string,
 	key = exportRegex.ReplaceAllString(splitString[0], "$1")
 
 	// Parse the value
-	value = parseValue(splitString[1], envMap)
+	value = parseValue(splitString[1], envMap, overload)
 	return
 }
 
@@ -279,7 +283,7 @@ var (
 	unescapeCharsRegex = regexp.MustCompile(`\\([^$])`)
 )
 
-func parseValue(value string, envMap map[string]string) string {
+func parseValue(value string, envMap map[string]string, overload bool) string {
 
 	// trim
 	value = strings.Trim(value, " ")
@@ -313,7 +317,7 @@ func parseValue(value string, envMap map[string]string) string {
 		}
 
 		if singleQuotes == nil {
-			value = expandVariables(value, envMap)
+			value = expandVariables(value, envMap, overload)
 		}
 	}
 
@@ -322,7 +326,7 @@ func parseValue(value string, envMap map[string]string) string {
 
 var expandVarRegex = regexp.MustCompile(`(\\)?(\$)(\()?\{?([A-Z0-9_]+)?\}?`)
 
-func expandVariables(v string, m map[string]string) string {
+func expandVariables(v string, m map[string]string, overload bool) string {
 	return expandVarRegex.ReplaceAllStringFunc(v, func(s string) string {
 		submatch := expandVarRegex.FindStringSubmatch(s)
 
@@ -332,6 +336,10 @@ func expandVariables(v string, m map[string]string) string {
 		if submatch[1] == "\\" || submatch[2] == "(" {
 			return submatch[0][1:]
 		} else if submatch[4] != "" {
+			if osEnv := os.Getenv(submatch[4]); osEnv != "" && (!overload || m[submatch[4]] == "") {
+				return osEnv
+			}
+
 			return m[submatch[4]]
 		}
 		return s
