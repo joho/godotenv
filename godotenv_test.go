@@ -12,7 +12,7 @@ import (
 var noopPresets = make(map[string]string)
 
 func parseAndCompare(t *testing.T, rawEnvLine string, expectedKey string, expectedValue string) {
-	key, value, _ := parseLine(rawEnvLine, noopPresets)
+	key, value, _ := parseLine(rawEnvLine, noopPresets, false)
 	if key != expectedKey || value != expectedValue {
 		t.Errorf("Expected '%v' to parse as '%v' => '%v', got '%v' => '%v' instead", rawEnvLine, expectedKey, expectedValue, key, value)
 	}
@@ -208,6 +208,8 @@ func TestSubstitutions(t *testing.T) {
 }
 
 func TestExpanding(t *testing.T) {
+	os.Setenv("GODOTENV_TEST", "testing")
+
 	tests := []struct {
 		name     string
 		input    string
@@ -222,6 +224,11 @@ func TestExpanding(t *testing.T) {
 			"parses variables wrapped in brackets",
 			"FOO=test\nBAR=${FOO}bar",
 			map[string]string{"FOO": "test", "BAR": "testbar"},
+		},
+		{
+			"expands previously existing variables to their values from os.Getenv",
+			"BAR=$GODOTENV_TEST",
+			map[string]string{"BAR": "testing"},
 		},
 		{
 			"expands undefined variables to an empty string",
@@ -370,7 +377,7 @@ func TestParsing(t *testing.T) {
 	// it 'throws an error if line format is incorrect' do
 	// expect{env('lol$wut')}.to raise_error(Dotenv::FormatError)
 	badlyFormattedLine := "lol$wut"
-	_, _, err := parseLine(badlyFormattedLine, noopPresets)
+	_, _, err := parseLine(badlyFormattedLine, noopPresets, false)
 	if err == nil {
 		t.Errorf("Expected \"%v\" to return error, but it didn't", badlyFormattedLine)
 	}
@@ -452,7 +459,7 @@ func TestRoundtrip(t *testing.T) {
 	fixtures := []string{"equals.env", "exported.env", "plain.env", "quoted.env"}
 	for _, fixture := range fixtures {
 		fixtureFilename := fmt.Sprintf("fixtures/%s", fixture)
-		env, err := readFile(fixtureFilename)
+		env, err := readFile(fixtureFilename, false)
 		if err != nil {
 			t.Errorf("Expected '%s' to read without error (%v)", fixtureFilename, err)
 		}
