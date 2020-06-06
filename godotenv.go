@@ -18,6 +18,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"os"
 	"os/exec"
 	"regexp"
@@ -148,20 +149,18 @@ func Exec(filenames []string, cmd string, cmdArgs []string) error {
 // Write serializes the given environment and writes it to a file
 func Write(envMap map[string]string, filename string) error {
 	content, err := Marshal(envMap)
+
 	if err != nil {
 		return err
 	}
-	file, err := os.Create(filename)
+
+	err = ioutil.WriteFile(filename, []byte(content), os.ModePerm)
+
 	if err != nil {
 		return err
 	}
-	defer file.Close()
-	_, err = file.WriteString(content)
-	if err != nil {
-		return err
-	}
-	file.Sync()
-	return err
+
+	return nil
 }
 
 // Marshal outputs the given environment as a dotenv-formatted environment file.
