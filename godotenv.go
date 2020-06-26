@@ -1,6 +1,6 @@
 // Package godotenv is a go port of the ruby dotenv library (https://github.com/bkeepers/dotenv)
 //
-// Examples/readme can be found on the github page at https://github.com/mniak/godotenv
+// Examples/readme can be found on the github page at https://github.com/joho/godotenv/godotenv
 //
 // The TL;DR is that you make a .env file that looks something like
 //
