@@ -445,7 +445,8 @@ func TestWrite(t *testing.T) {
 	writeAndCompare(`foo="\n\r\\r!"`, `foo="\n\r\\r\!"`)
 	// lines should be sorted
 	writeAndCompare("foo=bar\nbaz=buzz", "baz=\"buzz\"\nfoo=\"bar\"")
-
+	// integers should not be quoted
+	writeAndCompare(`key="10"`, `key=10`)
 }
 
 func TestRoundtrip(t *testing.T) {
