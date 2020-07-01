@@ -40,6 +40,18 @@ func loadEnvAndCompareValues(t *testing.T, loader func(files ...string) error, e
 	}
 }
 
+func compareTotal(t *testing.T, loader func(files []string) ([]string, error), envFolderName []string,  expectedNum int) {
+	values, err := loader(envFolderName)
+	if err != nil {
+		t.Fatalf("Error loading %v", envFolderName)
+	}
+
+	if len(values) != expectedNum {
+		t.Errorf("wrong number of files fetched: expected, %v got %v", len(values), expectedNum)
+	}
+
+}
+
 func TestLoadWithNoArgsLoadsDotEnv(t *testing.T) {
 	err := Load()
 	pathError := err.(*os.PathError)
@@ -414,6 +426,13 @@ func TestErrorReadDirectory(t *testing.T) {
 	if err == nil {
 		t.Errorf("Expected error, got %v", envMap)
 	}
+}
+
+func TestLoadMultipleEnvFiles(t *testing.T) {
+	folderName := []string{"fixtures"}
+	expectedFilesNum := 6
+
+	compareTotal(t, folders, folderName, expectedFilesNum)
 }
 
 func TestErrorParsing(t *testing.T) {
