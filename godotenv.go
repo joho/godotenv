@@ -68,7 +68,7 @@ func LoadOpt(filenames ...string) (err error) {
 
 	for _, filename := range filenames {
 		err = loadFile(filename, false)
-		if errors.Is(err, os.ErrNotExist) || err == nil {
+		if err != nil && os.IsNotExist(err) {
 			continue
 		}
 		return err
@@ -117,7 +117,7 @@ func OverloadOpt(filenames ...string) (err error) {
 
 	for _, filename := range filenames {
 		err = loadFile(filename, true)
-		if errors.Is(err, os.ErrNotExist) || err == nil {
+		if err != nil && os.IsNotExist(err) {
 			continue
 		}
 		return err
