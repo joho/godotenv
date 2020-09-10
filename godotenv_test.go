@@ -271,6 +271,34 @@ func TestExpanding(t *testing.T) {
 
 }
 
+func TestVariableStringValueSeparator(t *testing.T) {
+	input := "TEST_URLS=\"stratum+tcp://stratum.antpool.com:3333\nstratum+tcp://stratum.antpool.com:443\""
+	want := map[string]string{
+		"TEST_URLS": "stratum+tcp://stratum.antpool.com:3333\nstratum+tcp://stratum.antpool.com:443",
+	}
+	got, err := Parse(strings.NewReader(input))
+	if err != nil {
+		t.Error(err)
+	}
+
+	if len(got) != len(want) {
+		t.Fatalf(
+			"unexpected value:\nwant:\n\t%#v\n\ngot:\n\t%#v", want, got)
+	}
+
+	for k, wantVal := range want {
+		gotVal, ok := got[k]
+		if !ok {
+			t.Fatalf("key %q doesn't present in result", k)
+		}
+		if wantVal != gotVal {
+			t.Fatalf(
+				"mismatch in %q value:\nwant:\n\t%s\n\ngot:\n\t%s", k,
+				wantVal, gotVal)
+		}
+	}
+}
+
 func TestActualEnvVarsAreLeftAlone(t *testing.T) {
 	os.Clearenv()
 	os.Setenv("OPTION_A", "actualenv")
@@ -377,33 +405,38 @@ func TestParsing(t *testing.T) {
 }
 
 func TestLinesToIgnore(t *testing.T) {
-	// it 'ignores empty lines' do
-	// expect(env("\n \t  \nfoo=bar\n \nfizz=buzz")).to eql('foo' => 'bar', 'fizz' => 'buzz')
-	if !isIgnoredLine("\n") {
-		t.Error("Line with nothing but line break wasn't ignored")
+	cases := map[string]struct {
+		input string
+		want  string
+	}{
+		"Line with nothing but line break": {
+			input: "\n",
+		},
+		"Line with nothing but windows-style line break": {
+			input: "\r\n",
+		},
+		"Line full of whitespace": {
+			input: "\t\t ",
+		},
+		"Comment": {
+			input: "# Comment",
+		},
+		"Indented comment": {
+			input: "\t # comment",
+		},
+		"non-ignored value": {
+			input: `export OPTION_B='\n'`,
+			want:  `export OPTION_B='\n'`,
+		},
 	}
 
-	if !isIgnoredLine("\r\n") {
-		t.Error("Line with nothing but windows-style line break wasn't ignored")
-	}
-
-	if !isIgnoredLine("\t\t ") {
-		t.Error("Line full of whitespace wasn't ignored")
-	}
-
-	// it 'ignores comment lines' do
-	// expect(env("\n\n\n # HERE GOES FOO \nfoo=bar")).to eql('foo' => 'bar')
-	if !isIgnoredLine("# comment") {
-		t.Error("Comment wasn't ignored")
-	}
-
-	if !isIgnoredLine("\t#comment") {
-		t.Error("Indented comment wasn't ignored")
-	}
-
-	// make sure we're not getting false positives
-	if isIgnoredLine(`export OPTION_B='\n'`) {
-		t.Error("ignoring a perfectly valid line to parse")
+	for n, c := range cases {
+		t.Run(n, func(t *testing.T) {
+			got := string(getStatementStart([]byte(c.input)))
+			if got != c.want {
+				t.Errorf("Expected:\t %q\nGot:\t %q", c.want, got)
+			}
+		})
 	}
 }
 
