@@ -59,7 +59,10 @@ example
 	command.Stdout = os.Stdout
 	command.Stderr = os.Stderr
 
+	// Ignore interrupts so we don't exit before the sub-process does.
+	// This signal will still get passed to the sub-process.
 	signal.Ignore(os.Interrupt)
+
 	if err := command.Run(); err != nil {
 		log.Fatal(err)
 	}
