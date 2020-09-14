@@ -60,11 +60,7 @@ example
 	command.Stderr = os.Stderr
 
 	signal.Ignore(os.Interrupt)
-	if err := command.Start(); err != nil {
-		log.Fatal(err)
-	}
-
-	if err := command.Wait(); err != nil {
+	if err := command.Run(); err != nil {
 		log.Fatal(err)
 	}
 }
