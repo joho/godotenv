@@ -4,6 +4,9 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"os"
+	"os/exec"
+	"os/signal"
 
 	"strings"
 
@@ -43,12 +46,25 @@ example
 		envFilenames = strings.Split(rawEnvFilenames, ",")
 	}
 
+	if err := godotenv.Load(envFilenames...); err != nil {
+		log.Fatal(err)
+	}
+
 	// take rest of args and "exec" them
 	cmd := args[0]
 	cmdArgs := args[1:]
 
-	err := godotenv.Exec(envFilenames, cmd, cmdArgs)
-	if err != nil {
+	command := exec.Command(cmd, cmdArgs...)
+	command.Stdin = os.Stdin
+	command.Stdout = os.Stdout
+	command.Stderr = os.Stderr
+
+	signal.Ignore(os.Interrupt)
+	if err := command.Start(); err != nil {
+		log.Fatal(err)
+	}
+
+	if err := command.Wait(); err != nil {
 		log.Fatal(err)
 	}
 }
