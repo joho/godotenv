@@ -1,3 +1,4 @@
+arch: amd64
 language: go
 
 go:
