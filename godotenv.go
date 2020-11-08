@@ -22,6 +22,7 @@ import (
 	"os/exec"
 	"regexp"
 	"sort"
+	"strconv"
 	"strings"
 )
 
@@ -169,7 +170,11 @@ func Write(envMap map[string]string, filename string) error {
 func Marshal(envMap map[string]string) (string, error) {
 	lines := make([]string, 0, len(envMap))
 	for k, v := range envMap {
-		lines = append(lines, fmt.Sprintf(`%s="%s"`, k, doubleQuoteEscape(v)))
+		if d, err := strconv.Atoi(v); err == nil {
+			lines = append(lines, fmt.Sprintf(`%s=%d`, k, d))
+		} else {
+			lines = append(lines, fmt.Sprintf(`%s="%s"`, k, doubleQuoteEscape(v)))
+		}
 	}
 	sort.Strings(lines)
 	return strings.Join(lines, "\n"), nil
