@@ -110,9 +110,9 @@ content := getRemoteFileContent()
 myEnv, err := godotenv.Unmarshal(content)
 ```
 
-### Precendence & Conventions
+### Precedence & Conventions
 
-Existing envs take precendence of envs that are loaded later.
+Existing envs take precedence of envs that are loaded later.
 
 The [convention](https://github.com/bkeepers/dotenv#what-other-env-files-can-i-use)
 for managing multiple environments (i.e. development, test, production)
