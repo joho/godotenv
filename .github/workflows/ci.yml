@@ -3,9 +3,10 @@ name: CI
 on: [push]
 
 jobs:
-  build:
+  test:
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
         go: [ '1.15', '1.14' ]
         os: [ ubuntu-latest, macOS-latest, windows-latest ]
@@ -17,3 +18,45 @@ jobs:
         with:
           go-version: ${{ matrix.go }}
       - run: go test
+
+  test-non-amd64:
+    strategy:
+      fail-fast: false
+      matrix:
+        arch:
+          # For some reasons this is segfaulting on go env
+          # - name: IBM Z and LinuxONE
+          #   architecture: "s390x"
+          - name: POWER8
+            architecture: "ppc64le"
+    
+    runs-on: ubuntu-latest
+    name: Test on ${{ matrix.arch.name }} 
+    steps:
+      - uses: actions/checkout@v2
+      - uses: uraimo/run-on-arch-action@master
+        with:
+          arch: ${{ matrix.arch.architecture }}
+          distro: ubuntu20.04
+          env: | # YAML pipe
+            GOARCH: ${{ matrix.arch.architecture }}
+            CGO_ENABLED: 0
+          run: |
+            apt-get update
+            apt-get install -q -y curl wget git
+            latestGo=$(curl "https://golang.org/VERSION?m=text")
+            wget "https://dl.google.com/go/${latestGo}.linux-${GOARCH}.tar.gz"
+            rm -f $(which go)
+            rm -rf /usr/local/go
+            tar -C /usr/local -xzf "${latestGo}.linux-${GOARCH}.tar.gz"
+            export PATH=/usr/local/go/bin:$PATH
+            printf "Using go at: $(which go)\n"
+            printf "Go version: $(go version)\n"
+            printf "\n\nGo environment:\n\n"
+            go env
+            printf "\n\nSystem environment:\n\n"
+            env
+            go get -insecure -v -t -d ./...
+            go test ./...
+            cd ./cmd/godotenv
+            go build -trimpath -ldflags="-w -s" -v
