@@ -42,7 +42,7 @@ jobs:
             CGO_ENABLED: 0
           run: |
             apt-get update
-            apt install -y curl wget 
+            apt-get install -y curl wget git
             latestGo=$(curl "https://golang.org/VERSION?m=text")
             wget "https://dl.google.com/go/${latestGo}.linux-${GOARCH}.tar.gz"
             rm -f $(which go)
