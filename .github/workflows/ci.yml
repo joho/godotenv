@@ -35,9 +35,8 @@ jobs:
       - uses: actions/checkout@v2
       - uses: uraimo/run-on-arch-action@master
         with:
-          architecture: ${{ matrix.arch.architecture }}
-          distribution: ubuntu20.04
-          additionalArgs: -e GOARCH -e CGO_ENABLED
+          arch: ${{ matrix.arch.architecture }}
+          distro: ubuntu20.04
           env: | # YAML pipe
             GOARCH: ${{ matrix.arch.architecture }}
             CGO_ENABLED: 0
