@@ -30,17 +30,17 @@ jobs:
             architecture: "ppc64le"
     
     runs-on: ubuntu-latest
-    name: Build on ${{ matrix.arch.name }} 
+    name: Test on ${{ matrix.arch.name }} 
     steps:
       - uses: actions/checkout@v2
       - uses: uraimo/run-on-arch-action@master
-        env:
-          GOARCH: ${{ matrix.arch.architecture }}
-          CGO_ENABLED: 0
         with:
           architecture: ${{ matrix.arch.architecture }}
           distribution: ubuntu20.04
           additionalArgs: -e GOARCH -e CGO_ENABLED
+          env: | # YAML pipe
+            GOARCH: ${{ matrix.arch.architecture }}
+            CGO_ENABLED: 0
           run: |
             apt-get update
             apt install -y curl wget 
