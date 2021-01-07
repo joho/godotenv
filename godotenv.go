@@ -39,16 +39,19 @@ const doubleQuoteSpecialChars = "\\\n\r\"!$`"
 //		godotenv.Load("fileone", "filetwo")
 //
 // It's important to note that it WILL NOT OVERRIDE an env variable that already exists - consider the .env file to set dev vars or sensible defaults
-func Load(filenames ...string) (err error) {
-	filenames = filenamesOrDefault(filenames)
+func Load(filenames ...string) error {
+	envMap, err := Read(filenames...)
+	if err != nil {
+		return err
+	}
 
-	for _, filename := range filenames {
-		err = loadFile(filename, false)
-		if err != nil {
-			return // return early on a spazout
+	for _, e := range MergeEnvSlices(EnvMapToSlice(envMap), os.Environ()) {
+		// We assume env slice always has key and some value (even empty).
+		if err := os.Setenv(strings.Split(e, "=")[0], strings.SplitN(e, "=", 2)[1]); err != nil {
+			return err
 		}
 	}
-	return
+	return nil
 }
 
 // Overload will read your env file(s) and load them into ENV for this process.
@@ -63,15 +66,18 @@ func Load(filenames ...string) (err error) {
 //
 // It's important to note this WILL OVERRIDE an env variable that already exists - consider the .env file to forcefilly set all vars.
 func Overload(filenames ...string) (err error) {
-	filenames = filenamesOrDefault(filenames)
+	envMap, err := Read(filenames...)
+	if err != nil {
+		return err
+	}
 
-	for _, filename := range filenames {
-		err = loadFile(filename, true)
-		if err != nil {
-			return // return early on a spazout
+	for _, e := range MergeEnvSlices(os.Environ(), EnvMapToSlice(envMap)) {
+		// We assume env slice always has key and some value (even empty).
+		if err := os.Setenv(strings.Split(e, "=")[0], strings.SplitN(e, "=", 2)[1]); err != nil {
+			return err
 		}
 	}
-	return
+	return nil
 }
 
 // Read all env (with same file loading semantics as Load) but return values as
@@ -82,18 +88,15 @@ func Read(filenames ...string) (envMap map[string]string, err error) {
 
 	for _, filename := range filenames {
 		individualEnvMap, individualErr := readFile(filename)
-
 		if individualErr != nil {
-			err = individualErr
-			return // return early on a spazout
+			return nil, individualErr // Return early on a spazout.
 		}
 
 		for key, value := range individualEnvMap {
 			envMap[key] = value
 		}
 	}
-
-	return
+	return envMap, nil
 }
 
 // Parse reads an env file from io.Reader, returning a map of keys and values.
@@ -107,16 +110,15 @@ func Parse(r io.Reader) (envMap map[string]string, err error) {
 	}
 
 	if err = scanner.Err(); err != nil {
-		return
+		return nil, err
 	}
 
 	for _, fullLine := range lines {
 		if !isIgnoredLine(fullLine) {
 			var key, value string
 			key, value, err = parseLine(fullLine, envMap)
-
 			if err != nil {
-				return
+				return nil, err
 			}
 			envMap[key] = value
 		}
@@ -124,22 +126,39 @@ func Parse(r io.Reader) (envMap map[string]string, err error) {
 	return
 }
 
-//Unmarshal reads an env file from a string, returning a map of keys and values.
+// Unmarshal reads an env file from a string, returning a map of keys and values.
 func Unmarshal(str string) (envMap map[string]string, err error) {
 	return Parse(strings.NewReader(str))
 }
 
-// Exec loads env vars from the specified filenames (empty map falls back to default)
-// then executes the cmd specified.
+// EnvMapToSlice converts env map that you can get from `Read` or `Parse` into env sorted string
+// slice commonly used by `exec.Command`. This allows to execute new process with relevant
+// variables without changing current process environment.
+// See https://golang.org/pkg/os/exec/#Cmd `Env` field to read more about slice format.
+func EnvMapToSlice(m map[string]string) []string {
+	s := make([]string, 0, len(m))
+	for k, v := range m {
+		s = append(s, fmt.Sprintf("%s=%s", k, v))
+	}
+	sort.Strings(s)
+	return s
+}
+
+// Exec executes given command with args in separate process in environment that consists
+// of env vars from the specified filenames (empty map falls back to default) and current process env vars on top.
 //
 // Simply hooks up os.Stdin/err/out to the command and calls Run()
 //
 // If you want more fine grained control over your command it's recommended
 // that you use `Load()` or `Read()` and the `os/exec` package yourself.
 func Exec(filenames []string, cmd string, cmdArgs []string) error {
-	Load(filenames...)
+	envMap, err := Read(filenames...)
+	if err != nil {
+		return err
+	}
 
 	command := exec.Command(cmd, cmdArgs...)
+	command.Env = MergeEnvSlices(EnvMapToSlice(envMap), os.Environ())
 	command.Stdin = os.Stdin
 	command.Stdout = os.Stdout
 	command.Stderr = os.Stderr
@@ -187,26 +206,41 @@ func filenamesOrDefault(filenames []string) []string {
 	return filenames
 }
 
-func loadFile(filename string, overload bool) error {
-	envMap, err := readFile(filename)
-	if err != nil {
-		return err
-	}
+// MergeEnvSlices merges two slices into single sorted one by applying `over` slice into `base`.
+// The `over` slice will be used if the key overlaps.
+func MergeEnvSlices(base, over []string) (merged []string) {
+	sort.Strings(base)
+	sort.Strings(over)
 
-	currentEnv := map[string]bool{}
-	rawEnv := os.Environ()
-	for _, rawEnvLine := range rawEnv {
-		key := strings.Split(rawEnvLine, "=")[0]
-		currentEnv[key] = true
-	}
+	var b, o int
+	for b < len(base) || o < len(over) {
 
-	for key, value := range envMap {
-		if !currentEnv[key] || overload {
-			os.Setenv(key, value)
+		if b >= len(base) {
+			merged = append(merged, over[o])
+			o++
+			continue
+		}
+
+		if o >= len(over) {
+			merged = append(merged, base[b])
+			b++
+			continue
+		}
+
+		switch strings.Compare(strings.Split(base[b], "=")[0], strings.Split(over[o], "=")[0]) {
+		case 0:
+			// Same keys. Instead of picking over element, ignore base one. This ensure correct behaviour if base
+			// has duplicate elements.
+			b++
+		case 1:
+			merged = append(merged, over[o])
+			o++
+		case -1:
+			merged = append(merged, base[b])
+			b++
 		}
 	}
-
-	return nil
+	return merged
 }
 
 func readFile(filename string) (envMap map[string]string, err error) {

@@ -469,6 +469,36 @@ func TestRoundtrip(t *testing.T) {
 		if !reflect.DeepEqual(env, roundtripped) {
 			t.Errorf("Expected '%s' to roundtrip as '%v', got '%v' instead", fixtureFilename, env, roundtripped)
 		}
+	}
+}
 
+func TestEnvMapToSlice(t *testing.T) {
+	expected := []string{
+		"OPTION_A=1",
+		"OPTION_B=2",
+		"OPTION_C=",
+		"OPTION_D=\\n",
+		"OPTION_E=1",
+		"OPTION_F=2",
+		"OPTION_G=",
+		"OPTION_H=\n",
+		"OPTION_I=echo 'asd'",
+		"OPTION_J=postgres://localhost:5432/database?sslmode=disable",
+	}
+
+	converted := EnvMapToSlice(map[string]string{
+		"OPTION_I": "echo 'asd'",
+		"OPTION_A": "1",
+		"OPTION_B": "2",
+		"OPTION_E": "1",
+		"OPTION_C": "",
+		"OPTION_D": "\\n",
+		"OPTION_H": "\n",
+		"OPTION_F": "2",
+		"OPTION_G": "",
+		"OPTION_J": "postgres://localhost:5432/database?sslmode=disable",
+	})
+	if !reflect.DeepEqual(expected, converted) {
+		t.Errorf("Expected '%s' from EnvMapToSlice got '%v' instead", expected, converted)
 	}
 }
