@@ -157,7 +157,7 @@ func Write(envMap map[string]string, filename string) error {
 		return err
 	}
 	defer file.Close()
-	_, err = file.WriteString(content)
+	_, err = file.WriteString(content + "\n")
 	if err != nil {
 		return err
 	}
