@@ -148,7 +148,7 @@ func Exec(filenames []string, cmd string, cmdArgs []string) error {
 
 // Write serializes the given environment and writes it to a file
 func Write(envMap map[string]string, filename string) error {
-	content, err := Marshal(envMap) + "\n"
+	content, err := Marshal(envMap)
 	if err != nil {
 		return err
 	}
@@ -157,7 +157,7 @@ func Write(envMap map[string]string, filename string) error {
 		return err
 	}
 	defer file.Close()
-	_, err = file.WriteString(content)
+	_, err = file.WriteString(content + "\n")
 	if err != nil {
 		return err
 	}
