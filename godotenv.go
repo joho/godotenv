@@ -15,6 +15,7 @@ package godotenv
 
 import (
 	"bufio"
+	"embed"
 	"errors"
 	"fmt"
 	"io"
@@ -49,6 +50,50 @@ func Load(filenames ...string) (err error) {
 		}
 	}
 	return
+}
+
+func LoadFS(fsys embed.FS, filenames ...string) (err error) {
+	filenames = filenamesOrDefault(filenames)
+
+	for _, filename := range filenames {
+		err = loadFileFS(fsys, filename, false)
+		if err != nil {
+			return // return early on a spazout
+		}
+	}
+	return
+}
+
+func loadFileFS(fsys embed.FS, filename string, overload bool) error {
+	envMap, err := readFileFS(fsys, filename)
+	if err != nil {
+		return err
+	}
+
+	currentEnv := map[string]bool{}
+	rawEnv := os.Environ()
+	for _, rawEnvLine := range rawEnv {
+		key := strings.Split(rawEnvLine, "=")[0]
+		currentEnv[key] = true
+	}
+
+	for key, value := range envMap {
+		if !currentEnv[key] || overload {
+			os.Setenv(key, value)
+		}
+	}
+
+	return nil
+}
+
+func readFileFS(fsys embed.FS, filename string) (envMap map[string]string, err error) {
+	file, err := fsys.Open(filename)
+	if err != nil {
+		return
+	}
+	defer file.Close()
+
+	return Parse(file)
 }
 
 // Overload will read your env file(s) and load them into ENV for this process.
