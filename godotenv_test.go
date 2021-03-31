@@ -90,6 +90,14 @@ func TestOverloadWithNoArgsOverloadsDotEnv(t *testing.T) {
 	}
 }
 
+func TestOverloadFSWithNoArgsOverloadsDotEnv(t *testing.T) {
+	err := OverloadFS(content)
+	pathError := err.(*os.PathError)
+	if pathError == nil || pathError.Op != "open" || pathError.Path != ".env" {
+		t.Errorf("Didn't try and open .env by default")
+	}
+}
+
 func TestLoadFileNotFound(t *testing.T) {
 	err := Load("somefilethatwillneverexistever.env")
 	if err == nil {
@@ -106,6 +114,13 @@ func TestLoadFSFileNotFound(t *testing.T) {
 
 func TestOverloadFileNotFound(t *testing.T) {
 	err := Overload("somefilethatwillneverexistever.env")
+	if err == nil {
+		t.Error("File wasn't found but Overload didn't return an error")
+	}
+}
+
+func TestOverloadFSFileNotFound(t *testing.T) {
+	err := OverloadFS(content,"somefilethatwillneverexistever.env")
 	if err == nil {
 		t.Error("File wasn't found but Overload didn't return an error")
 	}
@@ -200,6 +215,20 @@ func TestOveroadDoesOverride(t *testing.T) {
 		"OPTION_A": "1",
 	}
 	loadEnvAndCompareValues(t, Overload, envFileName, expectedValues, presets)
+}
+
+func TestOveroadFSDoesOverride(t *testing.T) {
+	envFileName := "fixtures/plain.env"
+
+	// ensure NO overload
+	presets := map[string]string{
+		"OPTION_A": "do_not_override",
+	}
+
+	expectedValues := map[string]string{
+		"OPTION_A": "1",
+	}
+	loadFSEnvAndCompareValues(t, OverloadFS, content, envFileName, expectedValues, presets)
 }
 
 func TestLoadPlainEnv(t *testing.T) {

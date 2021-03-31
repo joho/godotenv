@@ -119,6 +119,18 @@ func Overload(filenames ...string) (err error) {
 	return
 }
 
+func OverloadFS(fsys embed.FS, filenames ...string) (err error) {
+	filenames = filenamesOrDefault(filenames)
+
+	for _, filename := range filenames {
+		err = loadFileFS(fsys, filename, true)
+		if err != nil {
+			return // return early on a spazout
+		}
+	}
+	return
+}
+
 // Read all env (with same file loading semantics as Load) but return values as
 // a map rather than automatically writing values into env
 func Read(filenames ...string) (envMap map[string]string, err error) {
