@@ -143,7 +143,8 @@ Assuming you've installed the command as above and you've got `$GOPATH/bin` in y
 godotenv -f /some/path/to/.env some_command with some args
 ```
 
-If you don't specify `-f` it will fall back on the default of loading `.env` in `PWD`
+If you don't specify `-f` it will fall back on the default of loading `.env` in `PWD`.
+Optional flag `-s` removes all the loaded files if the command fails and returns the same exit code.
 
 ### Writing Env Files
 
