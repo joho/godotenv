@@ -110,18 +110,63 @@ func Parse(r io.Reader) (envMap map[string]string, err error) {
 		return
 	}
 
-	for _, fullLine := range lines {
-		if !isIgnoredLine(fullLine) {
-			var key, value string
-			key, value, err = parseLine(fullLine, envMap)
-
-			if err != nil {
-				return
-			}
-			envMap[key] = value
+	for i:= 0; i < len(lines); i++ {
+		fullLine := lines[i]
+		if isIgnoredLine(fullLine) {
+			continue
 		}
+		var key, value string
+		key, value, err = parseLine(fullLine, envMap)
+		if err != nil {
+			continue
+		}
+
+		if len(value) > 0 && value[0] == '"' || value[0] == '\''{
+			quota := value[0]
+			value = value[1:]
+			for j := i+1; j < len(lines); j++ {
+				nextLine := lines[j]
+				value += "\n" + nextLine
+
+				if isMultiLineEnd(quota, nextLine) {
+					value = value[:len(value)-1]
+					i = j
+					break
+				}
+			}
+		}
+		envMap[key] = value
 	}
 	return
+}
+
+
+func isMultiLineEnd(quota byte, line string)bool{
+	l := len(line)
+	lastChar := line[l-1]
+	if lastChar != quota {
+		return false
+	}
+
+	// AABBCCDDD\"
+	// DDEEEFFFGG\\\\"
+	// 123456789"
+
+	if l > 3 && line[l-2] == '\\' && line[l-3] == '\\' {
+		return true
+	}
+
+	// AABBCCDDD\"
+	// DDEEEFFFGG"
+	if l == 2 && line[l-2] != '\\'{
+		return true
+	}
+
+	if l > 2 && line[l-2] != '\\' {
+		return true
+	}
+
+	return false
 }
 
 //Unmarshal reads an env file from a string, returning a map of keys and values.

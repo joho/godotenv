@@ -3,6 +3,7 @@ package godotenv
 import (
 	"bytes"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"reflect"
 	"strings"
@@ -470,5 +471,34 @@ func TestRoundtrip(t *testing.T) {
 			t.Errorf("Expected '%s' to roundtrip as '%v', got '%v' instead", fixtureFilename, env, roundtripped)
 		}
 
+	}
+}
+
+
+
+func TestMultiLine(t *testing.T) {
+	envFileName := "fixtures/multiline.env"
+	envMap, err := Read(envFileName)
+
+	if err != nil {
+		t.Error(err)
+	}
+
+
+	assertValue, err := ioutil.ReadFile(envFileName)
+	if err != nil {
+		t.Error(err)
+	}
+
+	assertValue = assertValue[21: len(assertValue)-1]
+
+	if envMap["PASSPORT_PUBLIC_KEY"] != string(assertValue) {
+		t.Errorf(
+			"Expected length %d, Actual length %d\r\n Expected Text:\r\n%s\r\nActual Text:\r\n%s\r\n",
+			len(assertValue),
+			len(envMap["PASSPORT_PUBLIC_KEY"]),
+			string(assertValue),
+			envMap["PASSPORT_PUBLIC_KEY"],
+		)
 	}
 }
