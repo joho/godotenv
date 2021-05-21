@@ -118,10 +118,10 @@ func Parse(r io.Reader) (envMap map[string]string, err error) {
 		var key, value string
 		key, value, err = parseLine(fullLine, envMap)
 		if err != nil {
-			continue
+			return
 		}
 
-		if len(value) > 0 && value[0] == '"' || value[0] == '\''{
+		if len(value) > 0 && (value[0] == '"' || value[0] == '\''){
 			quota := value[0]
 			value = value[1:]
 			for j := i+1; j < len(lines); j++ {
