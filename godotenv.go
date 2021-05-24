@@ -26,6 +26,23 @@ import (
 	"strings"
 )
 
+type ParseError struct {
+	Line uint
+	Err  error
+}
+
+func (e *ParseError) Error() string {
+	if e.Line == 0 {
+		return fmt.Sprintf("parse error before reading: %s", e.Err.Error())
+	}
+	return fmt.Sprintf("parse error on line %d: %s", e.Line, e.Err.Error())
+}
+
+func IsParseError(err error) bool {
+	_, ok := err.(*ParseError)
+	return ok
+}
+
 const doubleQuoteSpecialChars = "\\\n\r\"!$`"
 
 // Load will read your env file(s) and load them into ENV for this process.
@@ -99,6 +116,7 @@ func Read(filenames ...string) (envMap map[string]string, err error) {
 // Parse reads an env file from io.Reader, returning a map of keys and values.
 func Parse(r io.Reader) (envMap map[string]string, err error) {
 	envMap = make(map[string]string)
+	err = nil
 
 	var lines []string
 	scanner := bufio.NewScanner(r)
@@ -106,16 +124,24 @@ func Parse(r io.Reader) (envMap map[string]string, err error) {
 		lines = append(lines, scanner.Text())
 	}
 
-	if err = scanner.Err(); err != nil {
+	if e := scanner.Err(); e != nil {
+		err = &ParseError{
+			Err: e,
+		}
 		return
 	}
 
-	for _, fullLine := range lines {
+	for line, fullLine := range lines {
 		if !isIgnoredLine(fullLine) {
 			var key, value string
-			key, value, err = parseLine(fullLine, envMap)
+			var e error
+			key, value, e = parseLine(fullLine, envMap)
 
-			if err != nil {
+			if e != nil {
+				err = &ParseError{
+					Line: uint(line) + 1,
+					Err:  e,
+				}
 				return
 			}
 			envMap[key] = value
