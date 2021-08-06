@@ -472,3 +472,30 @@ func TestRoundtrip(t *testing.T) {
 
 	}
 }
+
+func TestExpandOSEnv(t *testing.T) {
+	envFileName := "fixtures/expand.env"
+
+	os.Setenv("OS_ENV_A", "99")
+	expectedValues := map[string]string{
+		"OPTION_A":        "1",
+		"OPTION_DEPEND_A": "1",
+		"OPTION_OS_ENV_A": "99",
+		"OPTION_OS_ENV_B": "99",
+	}
+
+	envMap, err := Read(envFileName)
+	if err != nil {
+		t.Error("Error reading file")
+	}
+
+	if len(envMap) != len(expectedValues) {
+		t.Error("Didn't get the right size map back")
+	}
+
+	for key, value := range expectedValues {
+		if envMap[key] != value {
+			t.Errorf("Read got one of the keys wrong, key=%s, expected=%s, got=%s", key, value, envMap[key])
+		}
+	}
+}
