@@ -65,9 +65,7 @@ func LoadWithLookupFn(lookupFn func(string) (string, bool), filenames ...string)
 //
 // It's important to note that it WILL NOT OVERRIDE an env variable that already exists - consider the .env file to set dev vars or sensible defaults
 func Load(filenames ...string) (err error) {
-	return LoadWithLookupFn(func(string) (string, bool){
-		return "", true
-	}, filenames...)
+	return LoadWithLookupFn(nil, filenames...)
 }
 
 // Overload will read your env file(s) and load them into ENV for this process.
@@ -85,9 +83,7 @@ func Overload(filenames ...string) (err error) {
 	filenames = filenamesOrDefault(filenames)
 
 	for _, filename := range filenames {
-		err = loadFile(filename, true, func(string) (string, bool) {
-			return "", true
-		})
+		err = loadFile(filename, true, nil)
 		if err != nil {
 			return // return early on a spazout
 		}
@@ -275,6 +271,9 @@ func parseLine(line string, envMap map[string]string, lookupFn func(string)(stri
 	if len(line) == 0 {
 		err = errors.New("zero length string")
 		return
+	}
+	if lookupFn == nil {
+		lookupFn = noLookupFn
 	}
 
 	// ditch the comments (but keep quoted hashes)
