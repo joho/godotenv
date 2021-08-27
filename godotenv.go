@@ -348,7 +348,7 @@ var (
 	doubleQuotesRegex  = regexp.MustCompile(`\A"(.*)"\z`)
 	escapeRegex        = regexp.MustCompile(`\\.`)
 	unescapeCharsRegex = regexp.MustCompile(`\\([^$])`)
-	variableNameRegex  = regexp.MustCompile(`^[_\\.a-zA-Z0-9]+$`)
+	variableNameRegex  = regexp.MustCompile(`^[-_\\.a-zA-Z0-9]+$`)
 
 	noLookupFn = func(string)(string, bool) {return "", true}
 )
