@@ -189,6 +189,10 @@ func TestLoadQuotedEnv(t *testing.T) {
 		"OPTION_G": "",
 		"OPTION_H": "\n",
 		"OPTION_I": "echo 'asd'",
+		"OPTION_J": "line 1\nline 2",
+		"OPTION_K": "line one\nthis is \\'quoted\\'\none more line",
+		"OPTION_L": "line 1\nline 2",
+		"OPTION_M": "line one\nthis is \"quoted\"\none more line",
 	}
 
 	loadEnvAndCompareValues(t, Load, envFileName, expectedValues, noopPresets)
