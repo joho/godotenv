@@ -35,7 +35,7 @@ func loadEnvAndCompareValues(t *testing.T, loader func(files ...string) error, e
 		envValue := os.Getenv(k)
 		v := expectedValues[k]
 		if envValue != v {
-			t.Errorf("Mismatch for key '%v': expected '%v' got '%v'", k, v, envValue)
+			t.Errorf("Mismatch for key '%v': expected '%#v' got '%#v'", k, v, envValue)
 		}
 	}
 }
