@@ -41,6 +41,7 @@ jobs:
           env: | # YAML pipe
             GOARCH: ${{ matrix.arch.architecture }}
             CGO_ENABLED: 0
+            GOPRIVATE: github.com/joho/godotenv
           run: |
             apt-get update
             apt-get install -q -y curl wget git
@@ -56,7 +57,7 @@ jobs:
             go env
             printf "\n\nSystem environment:\n\n"
             env
-            go get -insecure -v -t -d ./...
+            go get -v -t -d ./...
             go test ./...
             cd ./cmd/godotenv
             go build -trimpath -ldflags="-w -s" -v
