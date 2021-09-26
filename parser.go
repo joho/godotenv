@@ -17,6 +17,10 @@ const (
 )
 
 func parseBytes(src []byte, out map[string]string) error {
+	// Convert Windows-style \r\n to Unix-style \n
+	src = bytes.Replace(src, []byte("\r\n"), []byte("\n"), -1)
+	src = bytes.Replace(src, []byte("\r"), []byte("\n"), -1)
+	
 	cutset := src
 	for {
 		cutset = getStatementStart(cutset)
