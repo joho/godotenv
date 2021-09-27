@@ -20,6 +20,7 @@ import (
 	"io"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"regexp"
 	"sort"
 	"strconv"
@@ -38,16 +39,32 @@ const doubleQuoteSpecialChars = "\\\n\r\"!$`"
 //
 //		godotenv.Load("fileone", "filetwo")
 //
+// Also, you can tell it a folder name, and it would crawl the folder tree and load all the env files
+//
+//      godotenv.Load("fixtures")
+//
 // It's important to note that it WILL NOT OVERRIDE an env variable that already exists - consider the .env file to set dev vars or sensible defaults
 func Load(filenames ...string) (err error) {
 	filenames = filenamesOrDefault(filenames)
+	paths := make([]string, 0)
 
 	for _, filename := range filenames {
-		err = loadFile(filename, false)
-		if err != nil {
-			return // return early on a spazout
+		if _, err = os.Stat(filename); !os.IsNotExist(err) {
+			paths, err = folders(filenames)
+			for _, p := range paths {
+				err = loadFile(p, false)
+				if err != nil {
+					return
+				}
+			}
+		}else{
+			err = loadFile(filename, false)
+			if err != nil {
+				return // return early on a spazout
+			}
 		}
 	}
+
 	return
 }
 
@@ -61,14 +78,30 @@ func Load(filenames ...string) (err error) {
 //
 //		godotenv.Overload("fileone", "filetwo")
 //
+// Also, you can tell it a folder name, and it would crawl the folder tree and load all the env files
+//
+//      godotenv.Overload("fixtures")
+//
+//
 // It's important to note this WILL OVERRIDE an env variable that already exists - consider the .env file to forcefilly set all vars.
 func Overload(filenames ...string) (err error) {
 	filenames = filenamesOrDefault(filenames)
+	paths := make([]string, 0)
 
 	for _, filename := range filenames {
-		err = loadFile(filename, true)
-		if err != nil {
-			return // return early on a spazout
+		if _, err = os.Stat(filename); !os.IsNotExist(err) {
+			paths, err = folders(filenames)
+			for _, p := range paths {
+				err = loadFile(p, true)
+				if err != nil {
+					return
+				}
+			}
+		}else{
+			err = loadFile(filename, true)
+			if err != nil {
+				return // return early on a spazout
+			}
 		}
 	}
 	return
@@ -185,6 +218,28 @@ func filenamesOrDefault(filenames []string) []string {
 		return []string{".env"}
 	}
 	return filenames
+}
+
+func folders(folders []string) ([]string, error) {
+	paths := make([]string, 0)
+
+	for _, folder := range folders {
+		err := filepath.Walk(folder, func(path string, info os.FileInfo, err error) error {
+			if err != nil {
+				return err
+			}
+
+			if ext := filepath.Ext(path); ext == ".env" {
+				paths = append(paths, path)
+			}
+			return nil
+		})
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return paths, nil
 }
 
 func loadFile(filename string, overload bool) error {
