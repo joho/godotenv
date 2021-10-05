@@ -98,6 +98,30 @@ func TestReadPlainEnv(t *testing.T) {
 	}
 }
 
+func TestReadPlainEnvWithLongLine(t *testing.T) {
+	envFileName := "fixtures/long.env"
+	expectedBigValue := strings.Repeat("abcd", 20000)
+	expectedValues := map[string]string{
+		"BIG_VALUE": expectedBigValue,
+		"SMALL_VALUE": "abcd",
+	}
+
+	envMap, err := Read(envFileName)
+	if err != nil {
+		t.Error("Error reading file -> " + err.Error() )
+	}
+
+	if len(envMap) != len(expectedValues) {
+		t.Error("Didn't get the right size map back")
+	}
+
+	for key, value := range expectedValues {
+		if envMap[key] != value {
+			t.Error("Read got one of the keys wrong")
+		}
+	}
+}
+
 func TestParse(t *testing.T) {
 	envMap, err := Parse(bytes.NewReader([]byte("ONE=1\nTWO='2'\nTHREE = \"3\"")))
 	expectedValues := map[string]string{
