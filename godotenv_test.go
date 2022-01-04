@@ -63,6 +63,7 @@ func TestLoadFileNotFound(t *testing.T) {
 	}
 }
 
+// We should search up parent directories until we find our .env files.
 func TestLoadFileInParent(t *testing.T) {
 	directory, err := os.MkdirTemp("", "sample")
 	if err != nil {
