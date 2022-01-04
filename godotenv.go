@@ -18,8 +18,10 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"regexp"
 	"sort"
 	"strconv"
@@ -27,6 +29,14 @@ import (
 )
 
 const doubleQuoteSpecialChars = "\\\n\r\"!$`"
+
+func stringSet(s []string) map[string]interface{} {
+	m := make(map[string]interface{})
+	for _, str := range s {
+		m[str] = true
+	}
+	return m
+}
 
 // Load will read your env file(s) and load them into ENV for this process.
 //
@@ -42,7 +52,46 @@ const doubleQuoteSpecialChars = "\\\n\r\"!$`"
 func Load(filenames ...string) (err error) {
 	filenames = filenamesOrDefault(filenames)
 
-	for _, filename := range filenames {
+	filenamesMap := stringSet(filenames)
+
+	// We start in the current working directory and look up until we find all
+	// of our files or hit the root path.
+	currentDirectory, err := os.Getwd()
+	if err != nil {
+		return err
+	}
+
+	filePaths := make([]string, 0)
+	for {
+		files, err := ioutil.ReadDir(currentDirectory)
+		if err != nil {
+			return err
+		}
+
+		// Check if any of our desired files are in the current directory.
+		for _, directoryFile := range files {
+			for filename := range filenamesMap {
+				if filename == directoryFile.Name() {
+					filePaths = append(filePaths, currentDirectory+"/"+directoryFile.Name())
+					delete(filenamesMap, directoryFile.Name())
+				}
+
+			}
+		}
+		// We've found all of our files.
+		if len(filenamesMap) == 0 {
+			break
+		}
+		parent := filepath.Dir(currentDirectory)
+
+		// We've hit the file system root.
+		if parent == currentDirectory {
+			break
+		}
+		currentDirectory = parent
+	}
+
+	for _, filename := range filePaths {
 		err = loadFile(filename, false)
 		if err != nil {
 			return // return early on a spazout
@@ -187,8 +236,8 @@ func filenamesOrDefault(filenames []string) []string {
 	return filenames
 }
 
-func loadFile(filename string, overload bool) error {
-	envMap, err := readFile(filename)
+func loadFile(filePath string, overload bool) error {
+	envMap, err := readFile(filePath)
 	if err != nil {
 		return err
 	}
@@ -209,8 +258,8 @@ func loadFile(filename string, overload bool) error {
 	return nil
 }
 
-func readFile(filename string) (envMap map[string]string, err error) {
-	file, err := os.Open(filename)
+func readFile(filePath string) (envMap map[string]string, err error) {
+	file, err := os.Open(filePath)
 	if err != nil {
 		return
 	}

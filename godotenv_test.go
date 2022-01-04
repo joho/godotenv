@@ -63,6 +63,39 @@ func TestLoadFileNotFound(t *testing.T) {
 	}
 }
 
+func TestLoadFileInParent(t *testing.T) {
+	directory, err := os.MkdirTemp("", "sample")
+	if err != nil {
+		t.Error("Couldn't create temp directory.")
+	}
+	f, err := os.Create(directory + "/someparentfile.env")
+	if err != nil {
+		t.Error("Failed to create file.")
+	}
+	defer f.Close()
+
+	f.WriteString("GODOT_LOAD_FILE_IN_PARENT_TEST=1\n")
+
+	nestedPath := directory + "/some/nested/path"
+	err = os.MkdirAll(nestedPath, 0755)
+	if err != nil {
+		t.Error("Failed to create directories.")
+	}
+	err = os.Chdir(nestedPath)
+	if err != nil {
+		t.Error("Failed to change directory.")
+	}
+
+	err = Load("someparentfile.env")
+	if err != nil {
+		t.Error("Error loading file.")
+	}
+
+	if os.Getenv("GODOT_LOAD_FILE_IN_PARENT_TEST") != "1" {
+		t.Error("Failed to set env.")
+	}
+}
+
 func TestOverloadFileNotFound(t *testing.T) {
 	err := Overload("somefilethatwillneverexistever.env")
 	if err == nil {
