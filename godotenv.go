@@ -18,7 +18,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
 	"os"
 	"os/exec"
 	"regexp"
@@ -154,9 +153,7 @@ func Parse(r io.Reader) (envMap map[string]string, err error) {
 			if isYAMLExtensionFile {
 				// handle yaml levels
 				// key with prefix spaces
-				log.Println("pre", key)
 				key = parseYAMLKeyName(key)
-				log.Println("after", key, value)
 			}
 
 			if err != nil {
