@@ -207,6 +207,20 @@ func TestSubstitutions(t *testing.T) {
 	loadEnvAndCompareValues(t, Load, envFileName, expectedValues, noopPresets)
 }
 
+func TestYAMLEnv(t *testing.T) {
+	envFileName := "fixtures/yamlEnv.env.yml"
+	expectedValues := map[string]string{
+		"Redis.Version":                "6.2.6",
+		"Redis.Host":                   "123.123.123.123",
+		"Redis.REDIS_HOST_PORT":        "12344",
+		"Redis.REDIS_PASSWORD":         "Password",
+		"Redis.Env.System":             "MacOS",
+		"Redis.Env.Disk.Storage.Space": "1GB",
+	}
+
+	loadEnvAndCompareValues(t, Load, envFileName, expectedValues, noopPresets)
+}
+
 func TestExpanding(t *testing.T) {
 	tests := []struct {
 		name     string

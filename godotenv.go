@@ -18,6 +18,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log"
 	"os"
 	"os/exec"
 	"regexp"
@@ -96,6 +97,41 @@ func Read(filenames ...string) (envMap map[string]string, err error) {
 	return
 }
 
+func prefixSpaceCount(key string) (int, string) {
+	result := 0
+	for _, char := range key {
+		if char != ' ' {
+			return result, key[result:]
+		}
+		result += 1
+	}
+	return result, key
+}
+
+var YAMLKeyNameList []string = []string{}
+
+func parseYAMLKeyName(key string) string {
+	spaceCount, keyName := prefixSpaceCount(key)
+	if keyName == "" {
+		return ""
+	}
+
+	level := spaceCount / 2
+	if level == len(YAMLKeyNameList) {
+		YAMLKeyNameList = append(YAMLKeyNameList, keyName)
+	} else if level < len(YAMLKeyNameList) {
+		YAMLKeyNameList = YAMLKeyNameList[0 : level+1]
+		YAMLKeyNameList[level] = keyName
+	} else {
+		// level > len(YAMLKeyNameList)
+		return ""
+	}
+
+	// get prefix list
+	prefixList := YAMLKeyNameList[0 : level+1]
+	return strings.Join(prefixList, ".")
+}
+
 // Parse reads an env file from io.Reader, returning a map of keys and values.
 func Parse(r io.Reader) (envMap map[string]string, err error) {
 	envMap = make(map[string]string)
@@ -114,6 +150,14 @@ func Parse(r io.Reader) (envMap map[string]string, err error) {
 		if !isIgnoredLine(fullLine) {
 			var key, value string
 			key, value, err = parseLine(fullLine, envMap)
+
+			if isYAMLExtensionFile {
+				// handle yaml levels
+				// key with prefix spaces
+				log.Println("pre", key)
+				key = parseYAMLKeyName(key)
+				log.Println("after", key, value)
+			}
 
 			if err != nil {
 				return
@@ -187,6 +231,14 @@ func filenamesOrDefault(filenames []string) []string {
 	return filenames
 }
 
+// match xxx.yaml or xxx.yml
+var yamlExtensionRegex = regexp.MustCompile(`\.ya?ml$`)
+var isYAMLExtensionFile bool
+
+func filenameWithYAMLExtension(filename string) bool {
+	return yamlExtensionRegex.MatchString(filename)
+}
+
 func loadFile(filename string, overload bool) error {
 	envMap, err := readFile(filename)
 	if err != nil {
@@ -216,6 +268,7 @@ func readFile(filename string) (envMap map[string]string, err error) {
 	}
 	defer file.Close()
 
+	isYAMLExtensionFile = filenameWithYAMLExtension(filename)
 	return Parse(file)
 }
 
@@ -265,6 +318,13 @@ func parseLine(line string, envMap map[string]string) (key string, value string,
 
 	// Parse the key
 	key = splitString[0]
+	if isYAMLExtensionFile {
+		// keep prefix spaces
+		key = strings.TrimRight(key, " ")
+		value = parseValue(splitString[1], envMap)
+		return
+	}
+
 	if strings.HasPrefix(key, "export") {
 		key = strings.TrimPrefix(key, "export")
 	}
