@@ -29,9 +29,9 @@ jobs:
           #   architecture: "s390x"
           - name: POWER8
             architecture: "ppc64le"
-    
+
     runs-on: ubuntu-latest
-    name: Test on ${{ matrix.arch.name }} 
+    name: Test on ${{ matrix.arch.name }}
     steps:
       - uses: actions/checkout@v2
       - uses: uraimo/run-on-arch-action@master
@@ -45,7 +45,7 @@ jobs:
           run: |
             apt-get update
             apt-get install -q -y curl wget git
-            latestGo=$(curl "https://golang.org/VERSION?m=text")
+            latestGo=$(curl "https://go.dev/VERSION?m=text")
             wget "https://dl.google.com/go/${latestGo}.linux-${GOARCH}.tar.gz"
             rm -f $(which go)
             rm -rf /usr/local/go
