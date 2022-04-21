@@ -1,6 +1,6 @@
 # GoDotEnv ![CI](https://github.com/joho/godotenv/workflows/CI/badge.svg) [![Go Report Card](https://goreportcard.com/badge/github.com/joho/godotenv)](https://goreportcard.com/report/github.com/joho/godotenv)
 
-A Go (golang) port of the Ruby dotenv project (which loads env vars from a .env file)
+A Go (golang) port of the Ruby [dotenv](https://github.com/bkeepers/dotenv) project (which loads env vars from a .env file).
 
 From the original Library:
 
@@ -8,9 +8,9 @@ From the original Library:
 >
 > But it is not always practical to set environment variables on development machines or continuous integration servers where multiple projects are run. Dotenv load variables from a .env file into ENV when the environment is bootstrapped.
 
-It can be used as a library (for loading in env for your own daemons etc) or as a bin command.
+It can be used as a library (for loading in env for your own daemons etc.) or as a bin command.
 
-There is test coverage and CI for both linuxish and windows environments, but I make no guarantees about the bin version working on windows.
+There is test coverage and CI for both linuxish and Windows environments, but I make no guarantees about the bin version working on Windows.
 
 ## Installation
 
