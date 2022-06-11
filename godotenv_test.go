@@ -2,10 +2,12 @@ package godotenv
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"os"
 	"reflect"
 	"strings"
+	"syscall"
 	"testing"
 )
 
@@ -470,5 +472,13 @@ func TestRoundtrip(t *testing.T) {
 			t.Errorf("Expected '%s' to roundtrip as '%v', got '%v' instead", fixtureFilename, env, roundtripped)
 		}
 
+	}
+}
+
+func TestExecWhenFileNotFound(t *testing.T) {
+	fileNames := []string{"not-existed-file-name.env"}
+	err := Exec(fileNames, "", []string{})
+	if 	!errors.Is(err, syscall.ERROR_FILE_NOT_FOUND) {
+		t.Error("Expected: return error when system cannot find the file specified")
 	}
 }
