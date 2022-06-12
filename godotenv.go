@@ -137,7 +137,9 @@ func Unmarshal(str string) (envMap map[string]string, err error) {
 // If you want more fine grained control over your command it's recommended
 // that you use `Load()` or `Read()` and the `os/exec` package yourself.
 func Exec(filenames []string, cmd string, cmdArgs []string) error {
-	Load(filenames...)
+
+	filteredFilenames := filterFilesNotExist(filenames)
+	Load(filteredFilenames...)
 
 	command := exec.Command(cmd, cmdArgs...)
 	command.Stdin = os.Stdin
@@ -360,4 +362,16 @@ func doubleQuoteEscape(line string) string {
 		line = strings.Replace(line, string(c), toReplace, -1)
 	}
 	return line
+}
+
+func filterFilesNotExist(filenames []string) []string {
+	result := make([]string, 0, len(filenames))
+	for _, fileName := range filenames {
+		if _, err := os.Stat(fileName); err != nil {
+			fmt.Fprintf(os.Stderr, "File: `%s` not found \n", fileName)
+		} else {
+			result = append(result, fileName)
+		}
+	}
+	return result
 }
