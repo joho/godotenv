@@ -1,6 +1,6 @@
 // Package godotenv is a go port of the ruby dotenv library (https://github.com/bkeepers/dotenv)
 //
-// Examples/readme can be found on the github page at https://github.com/joho/godotenv
+// Examples/readme can be found on the GitHub page at https://github.com/joho/godotenv
 //
 // The TL;DR is that you make a .env file that looks something like
 //
@@ -61,7 +61,7 @@ func Load(filenames ...string) (err error) {
 //
 //		godotenv.Overload("fileone", "filetwo")
 //
-// It's important to note this WILL OVERRIDE an env variable that already exists - consider the .env file to forcefilly set all vars.
+// It's important to note this WILL OVERRIDE an env variable that already exists - consider the .env file to forcefully set all vars.
 func Overload(filenames ...string) (err error) {
 	filenames = filenamesOrDefault(filenames)
 
