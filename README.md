@@ -21,6 +21,7 @@ go get github.com/joho/godotenv
 ```
 
 or if you want to use it as a bin command
+
 go >= 1.17
 ```shell
 go install github.com/joho/godotenv/cmd/godotenv@latest
@@ -169,9 +170,17 @@ content, err := godotenv.Marshal(env)
 
 ## Contributing
 
-Contributions are most welcome! The parser itself is pretty stupidly naive and I wouldn't be surprised if it breaks with edge cases.
+Contributions are welcome, but with some caveats.
 
-*code changes without tests will not be accepted*
+This library has been declared feature complete (see [#182](https://github.com/joho/godotenv/issues/182) for background) and will not be accepting issues or pull requests adding new functionality or breaking the library API.
+
+Contributions would be gladly accepted that:
+
+* bring this library's parsing into closer compatibility with the mainline dotenv implementations, in particular [Ruby's dotenv](https://github.com/bkeepers/dotenv) and [Node.js' dotenv](https://github.com/motdotla/dotenv)
+* keep the library up to date with the go ecosystem (ie CI bumps, documentation changes, changes in the core libraries)
+* bug fixes for use cases that pertain to the library's purpose of easing development of codebases deployed into twelve factor environments
+
+*code changes without tests and references to peer dotenv implementations will not be accepted*
 
 1. Fork it
 2. Create your feature branch (`git checkout -b my-new-feature`)
@@ -184,10 +193,6 @@ Contributions are most welcome! The parser itself is pretty stupidly naive and I
 Releases should follow [Semver](http://semver.org/) though the first couple of releases are `v1` and `v1.1`.
 
 Use [annotated tags for all releases](https://github.com/joho/godotenv/issues/30). Example `git tag -a v1.2.1`
-
-## CI
-
-Linux: [![Build Status](https://travis-ci.org/joho/godotenv.svg?branch=master)](https://travis-ci.org/joho/godotenv) Windows: [![Build status](https://ci.appveyor.com/api/projects/status/9v40vnfvvgde64u4)](https://ci.appveyor.com/project/joho/godotenv)
 
 ## Who?
 
