@@ -8,7 +8,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        go: [ '1.15', '1.14' ]
+        go: [ '1.18', '1.17', '1.16', '1.15' ]
         os: [ ubuntu-latest, macOS-latest, windows-latest ]
     name: ${{ matrix.os }} Go ${{ matrix.go }} Tests
     steps:
