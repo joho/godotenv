@@ -99,16 +99,7 @@ func Read(filenames ...string) (envMap map[string]string, err error) {
 // Parse reads an env file from io.Reader, returning a map of keys and values.
 func Parse(r io.Reader) (envMap map[string]string, err error) {
 	envMap = make(map[string]string)
-
-	var lines []string
-	scanner := bufio.NewScanner(r)
-	for scanner.Scan() {
-		lines = append(lines, scanner.Text())
-	}
-
-	if err = scanner.Err(); err != nil {
-		return
-	}
+	lines, err := ReadAllLines(r)
 
 	for _, fullLine := range lines {
 		if !isIgnoredLine(fullLine) {
@@ -121,6 +112,35 @@ func Parse(r io.Reader) (envMap map[string]string, err error) {
 			envMap[key] = value
 		}
 	}
+	return
+}
+
+// ReadAllLines will convert the Reader into an array of strings
+// one for each line in the original text.
+func ReadAllLines(r io.Reader) (lines []string, err error) {
+	bf := bufio.NewReader(r)
+	linePart, isPrefix, err := bf.ReadLine()
+
+	for err == nil {
+		lineStr := string(linePart)
+
+		// handling of lines larger than the default buffer size
+		for err == nil && isPrefix == true {
+			linePart, isPrefix, err = bf.ReadLine()
+			if err != nil {
+				break
+			}
+			lineStr += string(linePart)
+		}
+
+		// `err == nil` is used to skip lines which caused an error
+		if isPrefix == false && err == nil {
+			lines = append(lines, lineStr)
+		}
+
+		linePart, isPrefix, err = bf.ReadLine()
+	}
+
 	return
 }
 
