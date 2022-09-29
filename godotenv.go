@@ -40,10 +40,26 @@ const doubleQuoteSpecialChars = "\\\n\r\"!$`"
 //
 // It's important to note that it WILL NOT OVERRIDE an env variable that already exists - consider the .env file to set dev vars or sensible defaults
 func Load(filenames ...string) (err error) {
+	return LoadWithPrefix("", filenames...)
+}
+
+// LoadWithPrefix will read your env file(s) and load them into ENV for this
+// process. It allows you to specify a prefix for the env variables.
+//
+// Call this function as close as possible to the start of your program (ideally in main)
+//
+// If you call Load without any args it will default to loading .env in the current path
+//
+// You can otherwise tell it which files to load (there can be more than one) like
+//
+//		godotenv.Load("fileone", "filetwo")
+//
+// It's important to note that it WILL NOT OVERRIDE an env variable that already exists - consider the .env file to set dev vars or sensible defaults
+func LoadWithPrefix(prefix string, filenames ...string) (err error) {
 	filenames = filenamesOrDefault(filenames)
 
 	for _, filename := range filenames {
-		err = loadFile(filename, false)
+		err = loadFileWithPrefix(prefix, filename, false)
 		if err != nil {
 			return // return early on a spazout
 		}
@@ -63,10 +79,26 @@ func Load(filenames ...string) (err error) {
 //
 // It's important to note this WILL OVERRIDE an env variable that already exists - consider the .env file to forcefully set all vars.
 func Overload(filenames ...string) (err error) {
+	return OverloadWithPrefix("", filenames...)
+}
+
+// OverloadWithPrefix will read your env file(s) and load them into ENV for this
+// process. It allows you to specify a prefix for the env variables.
+//
+// Call this function as close as possible to the start of your program (ideally in main)
+//
+// If you call Overload without any args it will default to loading .env in the current path
+//
+// You can otherwise tell it which files to load (there can be more than one) like
+//
+//		godotenv.Overload("fileone", "filetwo")
+//
+// It's important to note this WILL OVERRIDE an env variable that already exists - consider the .env file to forcefully set all vars.
+func OverloadWithPrefix(prefix string, filenames ...string) (err error) {
 	filenames = filenamesOrDefault(filenames)
 
 	for _, filename := range filenames {
-		err = loadFile(filename, true)
+		err = loadFileWithPrefix(prefix, filename, true)
 		if err != nil {
 			return // return early on a spazout
 		}
@@ -124,7 +156,7 @@ func Parse(r io.Reader) (envMap map[string]string, err error) {
 	return
 }
 
-//Unmarshal reads an env file from a string, returning a map of keys and values.
+// Unmarshal reads an env file from a string, returning a map of keys and values.
 func Unmarshal(str string) (envMap map[string]string, err error) {
 	return Parse(strings.NewReader(str))
 }
@@ -188,6 +220,10 @@ func filenamesOrDefault(filenames []string) []string {
 }
 
 func loadFile(filename string, overload bool) error {
+	return loadFileWithPrefix("", filename, overload)
+}
+
+func loadFileWithPrefix(prefix, filename string, overload bool) error {
 	envMap, err := readFile(filename)
 	if err != nil {
 		return err
@@ -202,7 +238,7 @@ func loadFile(filename string, overload bool) error {
 
 	for key, value := range envMap {
 		if !currentEnv[key] || overload {
-			os.Setenv(key, value)
+			os.Setenv(fmt.Sprintf("%s%s", prefix, key), value)
 		}
 	}
 

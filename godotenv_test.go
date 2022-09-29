@@ -177,6 +177,36 @@ func TestLoadEqualsEnv(t *testing.T) {
 	loadEnvAndCompareValues(t, Load, envFileName, expectedValues, noopPresets)
 }
 
+func TestLoadEqualsEnvPrefix(t *testing.T) {
+	os.Unsetenv("OPTION_A")
+
+	envFileName := "fixtures/equals.env"
+	expectedValues := "postgres://localhost:5432/database?sslmode=disable"
+	prefix := "TEXTPREFIX_"
+
+	LoadWithPrefix(prefix, envFileName)
+
+	if os.Getenv(fmt.Sprintf("%sOPTION_A", prefix)) != expectedValues {
+		t.Errorf("Expected %s got %s", expectedValues, os.Getenv(fmt.Sprintf("%sOPTION_A", prefix)))
+	}
+}
+
+func TestLoadEqualsEnvEmptyPrefix(t *testing.T) {
+	envFileName := "fixtures/equals.env"
+	expectedValues := "postgres://localhost:5432/database?sslmode=disable"
+	prefix := ""
+
+	LoadWithPrefix(prefix, envFileName)
+
+	if os.Getenv(fmt.Sprintf("%sOPTION_A", prefix)) != expectedValues {
+		t.Errorf("Expected %s got %s", expectedValues, os.Getenv(fmt.Sprintf("%sOPTION_A", prefix)))
+	}
+
+	if os.Getenv("OPTION_A") != expectedValues {
+		t.Errorf("Expected %s got %s", expectedValues, os.Getenv("OPTION_A"))
+	}
+}
+
 func TestLoadQuotedEnv(t *testing.T) {
 	envFileName := "fixtures/quoted.env"
 	expectedValues := map[string]string{
