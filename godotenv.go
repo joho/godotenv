@@ -32,7 +32,7 @@ const doubleQuoteSpecialChars = "\\\n\r\"!$`"
 //
 // Call this function as close as possible to the start of your program (ideally in main)
 //
-// If you call Load without any args it will default to loading .env in the current path
+// If you call Load without any args it will default to load .env in the current path
 //
 // You can otherwise tell it which files to load (there can be more than one) like
 //
@@ -55,7 +55,7 @@ func Load(filenames ...string) (err error) {
 //
 // Call this function as close as possible to the start of your program (ideally in main)
 //
-// If you call Overload without any args it will default to loading .env in the current path
+// If you call Overload without any args it will default to load .env in the current path
 //
 // You can otherwise tell it which files to load (there can be more than one) like
 //
