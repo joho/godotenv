@@ -12,7 +12,7 @@ import (
 var noopPresets = make(map[string]string)
 
 func parseAndCompare(t *testing.T, rawEnvLine string, expectedKey string, expectedValue string) {
-	key, value, _ := parseLine(rawEnvLine, noopPresets)
+	key, value, _ := parseLine(rawEnvLine, noopPresets, noLookupFn)
 	if key != expectedKey || value != expectedValue {
 		t.Errorf("Expected '%v' to parse as '%v' => '%v', got '%v' => '%v' instead", rawEnvLine, expectedKey, expectedValue, key, value)
 	}
@@ -84,6 +84,33 @@ func TestReadPlainEnv(t *testing.T) {
 
 	envMap, err := Read(envFileName)
 	if err != nil {
+		t.Errorf("Error reading file: %q", err)
+	}
+
+	if len(envMap) != len(expectedValues) {
+		t.Error("Didn't get the right size map back")
+	}
+
+	for key, value := range expectedValues {
+		if envMap[key] != value {
+			t.Error("Read got one of the keys wrong")
+		}
+	}
+}
+
+func TestInheritedEnvVariable(t *testing.T) {
+	pathVariable, ok := os.LookupEnv("PATH")
+	if !ok {
+		t.Error("Error getting path variable")
+	}
+
+	envFileName := "fixtures/inherited.env"
+	expectedValues := map[string]string{
+		"PATH": pathVariable,
+	}
+
+	envMap, err := ReadWithLookup(os.LookupEnv, envFileName)
+	if err != nil {
 		t.Error("Error reading file")
 	}
 
@@ -95,6 +122,31 @@ func TestReadPlainEnv(t *testing.T) {
 		if envMap[key] != value {
 			t.Error("Read got one of the keys wrong")
 		}
+	}
+}
+
+func TestInheritedEnvVariableNotFound(t *testing.T) {
+	envMap, err := Read("fixtures/inherited-not-found.env")
+	if envMap["VARIABLE_NOT_FOUND"] != "" || err != nil {
+		t.Errorf("Expected 'VARIABLE_NOT_FOUND' to be '' with no errors")
+	}
+}
+
+func TestInheritedEnvVariableNotFoundWithLookup(t *testing.T) {
+	notFoundMap := make(map[string]interface{})
+	envMap, err := ReadWithLookup(func(v string)(string, bool){
+		envVar, ok := os.LookupEnv(v)
+		if !ok {
+			notFoundMap[v] = nil
+		}
+		return envVar, ok
+	}, "fixtures/inherited-not-found.env")
+	if envMap["VARIABLE_NOT_FOUND"] != "" || err != nil {
+		t.Errorf("Expected 'VARIABLE_NOT_FOUND' to be '' with no errors")
+	}
+	_, ok := notFoundMap["VARIABLE_NOT_FOUND"]
+	if !ok {
+		t.Errorf("Expected 'VARIABLE_NOT_FOUND' to be in the set of not found variables")
 	}
 }
 
@@ -358,7 +410,6 @@ func TestParsing(t *testing.T) {
 	parseAndCompare(t, `FOO="bar\\\n\ b\az"`, "FOO", "bar\\\n baz")
 	parseAndCompare(t, `FOO="bar\\r\ b\az"`, "FOO", "bar\\r baz")
 
-	parseAndCompare(t, `="value"`, "", "value")
 	parseAndCompare(t, `KEY="`, "KEY", "\"")
 	parseAndCompare(t, `KEY="value`, "KEY", "\"value")
 
@@ -367,12 +418,14 @@ func TestParsing(t *testing.T) {
 	parseAndCompare(t, "   KEY=value", "KEY", "value")
 	parseAndCompare(t, "\tKEY=value", "KEY", "value")
 
+	parseAndCompare(t, "KEY-DASH=value", "KEY-DASH", "value")
+
 	// it 'throws an error if line format is incorrect' do
 	// expect{env('lol$wut')}.to raise_error(Dotenv::FormatError)
 	badlyFormattedLine := "lol$wut"
-	_, _, err := parseLine(badlyFormattedLine, noopPresets)
+	k, v, err := parseLine(badlyFormattedLine, noopPresets, noLookupFn)
 	if err == nil {
-		t.Errorf("Expected \"%v\" to return error, but it didn't", badlyFormattedLine)
+		t.Errorf("Expected \"%v\" to return error, but it didn't. key=%q, value=%q", badlyFormattedLine, k, v)
 	}
 }
 
@@ -454,7 +507,7 @@ func TestRoundtrip(t *testing.T) {
 	fixtures := []string{"equals.env", "exported.env", "plain.env", "quoted.env"}
 	for _, fixture := range fixtures {
 		fixtureFilename := fmt.Sprintf("fixtures/%s", fixture)
-		env, err := readFile(fixtureFilename)
+		env, err := readFile(fixtureFilename, noLookupFn)
 		if err != nil {
 			t.Errorf("Expected '%s' to read without error (%v)", fixtureFilename, err)
 		}
