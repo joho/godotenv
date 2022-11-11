@@ -268,7 +268,6 @@ func TestExpanding(t *testing.T) {
 			}
 		})
 	}
-
 }
 
 func TestActualEnvVarsAreLeftAlone(t *testing.T) {
@@ -304,7 +303,7 @@ func TestParsing(t *testing.T) {
 	// parses yaml style options
 	parseAndCompare(t, "OPTION_A: 1", "OPTION_A", "1")
 
-	//parses yaml values with equal signs
+	// parses yaml values with equal signs
 	parseAndCompare(t, "OPTION_A: Foo=bar", "OPTION_A", "Foo=bar")
 
 	// parses non-yaml options with colons
@@ -353,7 +352,7 @@ func TestParsing(t *testing.T) {
 	parseAndCompare(t, `FOO="ba#r"`, "FOO", "ba#r")
 	parseAndCompare(t, "FOO='ba#r'", "FOO", "ba#r")
 
-	//newlines and backslashes should be escaped
+	// newlines and backslashes should be escaped
 	parseAndCompare(t, `FOO="bar\n\ b\az"`, "FOO", "bar\n baz")
 	parseAndCompare(t, `FOO="bar\\\n\ b\az"`, "FOO", "bar\\\n baz")
 	parseAndCompare(t, `FOO="bar\\r\ b\az"`, "FOO", "bar\\r baz")
@@ -425,29 +424,63 @@ func TestErrorParsing(t *testing.T) {
 }
 
 func TestWrite(t *testing.T) {
-	writeAndCompare := func(env string, expected string) {
-		envMap, _ := Unmarshal(env)
-		actual, _ := Marshal(envMap)
-		if expected != actual {
-			t.Errorf("Expected '%v' (%v) to write as '%v', got '%v' instead.", env, envMap, expected, actual)
-		}
+	testCases := []struct {
+		desc                  string
+		value                 string
+		expected              string
+		dontEscapeExclamation bool
+	}{
+		{
+			desc:     "values are always double-quoted",
+			value:    `key=value`,
+			expected: `key="value"`,
+		},
+		{
+			desc:     "double-quotes are escaped",
+			value:    `key=va"lu"e`,
+			expected: `key="va\"lu\"e"`,
+		},
+		{
+			desc:     "but single quotes are left alone",
+			value:    `key=va'lu'e`,
+			expected: `key="va'lu'e"`,
+		},
+		{
+			desc:     "newlines, backslashes, and some other special chars are escaped",
+			value:    `foo="\n\r\\r!"`,
+			expected: `foo="\n\r\\r\!"`,
+		},
+		{
+			desc:                  "but when EscapeExclamation=false, should not escape exclamation",
+			value:                 `foo="\n\r\\r!"`,
+			expected:              `foo="\n\r\\r!"`,
+			dontEscapeExclamation: true,
+		},
+		{
+			desc:     "lines should be sorted",
+			value:    "foo=bar\nbaz=buzz",
+			expected: "baz=\"buzz\"\nfoo=\"bar\"",
+		},
+		{
+			desc:     "integers should not be quoted",
+			value:    `key="10"`,
+			expected: `key=10`,
+		},
 	}
-	//just test some single lines to show the general idea
-	//TestRoundtrip makes most of the good assertions
+	for _, tc := range testCases {
+		t.Run(tc.desc, func(t *testing.T) {
+			if tc.dontEscapeExclamation {
+				Options.EscapeExclamation = false
+			}
 
-	//values are always double-quoted
-	writeAndCompare(`key=value`, `key="value"`)
-	//double-quotes are escaped
-	writeAndCompare(`key=va"lu"e`, `key="va\"lu\"e"`)
-	//but single quotes are left alone
-	writeAndCompare(`key=va'lu'e`, `key="va'lu'e"`)
-	// newlines, backslashes, and some other special chars are escaped
-	writeAndCompare(`foo="\n\r\\r!"`, `foo="\n\r\\r\!"`)
-	// lines should be sorted
-	writeAndCompare("foo=bar\nbaz=buzz", "baz=\"buzz\"\nfoo=\"bar\"")
-	// integers should not be quoted
-	writeAndCompare(`key="10"`, `key=10`)
+			envMap, _ := Unmarshal(tc.value)
+			actual, _ := Marshal(envMap)
 
+			if tc.expected != actual {
+				t.Errorf("Expected '%v' (%v) to write as '%v', got '%v' instead.", tc.value, envMap, tc.expected, actual)
+			}
+		})
+	}
 }
 
 func TestRoundtrip(t *testing.T) {

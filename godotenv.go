@@ -26,8 +26,6 @@ import (
 	"strings"
 )
 
-const doubleQuoteSpecialChars = "\\\n\r\"!$`"
-
 // Load will read your env file(s) and load them into ENV for this process.
 //
 // Call this function as close as possible to the start of your program (ideally in main).
@@ -254,7 +252,7 @@ func parseLine(line string, envMap map[string]string) (key string, value string,
 	firstColon := strings.Index(line, ":")
 	splitString := strings.SplitN(line, "=", 2)
 	if firstColon != -1 && (firstColon < firstEquals || firstEquals == -1) {
-		//this is a yaml-style line
+		// this is a yaml-style line
 		splitString = strings.SplitN(line, ":", 2)
 	}
 
@@ -285,7 +283,6 @@ var (
 )
 
 func parseValue(value string, envMap map[string]string) string {
-
 	// trim
 	value = strings.Trim(value, " ")
 
@@ -348,8 +345,16 @@ func isIgnoredLine(line string) bool {
 	return len(trimmedLine) == 0 || strings.HasPrefix(trimmedLine, "#")
 }
 
+func getDoubleQuoteSpecialChars() string {
+	result := "\\\n\r\"$`"
+	if Options.EscapeExclamation {
+		return result + "!"
+	}
+	return result
+}
+
 func doubleQuoteEscape(line string) string {
-	for _, c := range doubleQuoteSpecialChars {
+	for _, c := range getDoubleQuoteSpecialChars() {
 		toReplace := "\\" + string(c)
 		if c == '\n' {
 			toReplace = `\n`
