@@ -137,7 +137,10 @@ func Unmarshal(str string) (envMap map[string]string, err error) {
 // If you want more fine grained control over your command it's recommended
 // that you use `Load()` or `Read()` and the `os/exec` package yourself.
 func Exec(filenames []string, cmd string, cmdArgs []string) error {
-	Load(filenames...)
+	err := Load(filenames...)
+	if err != nil {
+		return err
+	}
 
 	command := exec.Command(cmd, cmdArgs...)
 	command.Stdin = os.Stdin
