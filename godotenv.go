@@ -337,7 +337,11 @@ func expandVariables(v string, m map[string]string) string {
 		if submatch[1] == "\\" || submatch[2] == "(" {
 			return submatch[0][1:]
 		} else if submatch[4] != "" {
-			return m[submatch[4]]
+			if _, exists := m[submatch[4]]; exists {
+				return m[submatch[4]]
+			} else if len(os.Getenv(submatch[4])) > 0 {
+				return os.Getenv(submatch[4])
+			}
 		}
 		return s
 	})
