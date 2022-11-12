@@ -472,3 +472,42 @@ func TestRoundtrip(t *testing.T) {
 
 	}
 }
+
+func Test_filterFilesNotExist(t *testing.T) {
+	type testCase struct {
+		description       string
+		givenFilenames    []string
+		expectedFileNames []string
+	}
+
+	testCases := []testCase{
+		testCase{
+			description: "When all files do exist, then return all",
+			givenFilenames:    []string{"fixtures/equals.env", "fixtures/exported.env"},
+			expectedFileNames: []string{"fixtures/equals.env", "fixtures/exported.env"},
+		},
+		testCase{
+			description: "When none of the files do exist, then return empty slice",
+			givenFilenames:    []string{"not-existed-file.env", "wrong-fileName.env"},
+			expectedFileNames: []string{},
+		},
+		testCase{
+			description: "When some of the files do exist, then filter and return exist files",
+			givenFilenames:    []string{"not-existed-file.env", "wrong-fileName.env", "fixtures/equals.env"},
+			expectedFileNames: []string{"fixtures/equals.env"},
+		},
+	}
+
+	for _, testCase := range testCases {
+		//when
+		actual := filterFilesNotExist(testCase.givenFilenames)
+
+		//then
+		if !reflect.DeepEqual(actual, testCase.expectedFileNames) {
+			t.Error("For", testCase.description,
+				"\n Given: ", testCase.givenFilenames,
+				"\n Expected:", testCase.expectedFileNames,
+				"\n Got", actual)
+		}
+	}
+}
