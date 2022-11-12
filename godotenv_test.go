@@ -2,6 +2,7 @@ package godotenv
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"os"
 	"reflect"
@@ -112,6 +113,68 @@ func TestParse(t *testing.T) {
 		if envMap[key] != value {
 			t.Errorf("expected %s to be %s, got %s", key, value, envMap[key])
 		}
+	}
+}
+
+func TestIsParseError(t *testing.T) {
+	err := errors.New("test error")
+	if IsParseError(err) {
+		t.Errorf("Expected IsParseError(\"%s\") to be false, got true", err)
+	}
+
+	err = &ParseError{
+		Line: 1,
+		Err:  errors.New("test error inside"),
+	}
+	if !IsParseError(err) {
+		t.Errorf("Expected IsParseError(\"%s\") to be true, got false", err)
+	}
+}
+
+func TestErrorParse(t *testing.T) {
+	envMap, err := Parse(bytes.NewReader([]byte("ONE=1\nTWO\nTHREE = \"3\"")))
+	if err == nil {
+		t.Errorf("Expected error, got %v", envMap)
+	}
+
+	pErr, ok := err.(*ParseError)
+
+	if !ok {
+		t.Fatalf("expected to be ParseError, got %d", err)
+	}
+
+	if pErr.Line != 2 {
+		t.Fatalf("expected parse error line to be %d, got \"%s\"", 2, pErr)
+	}
+
+	if !strings.Contains(err.Error(), pErr.Err.Error()) {
+		t.Fatalf("expected parse error contain underlying error \"%s\", got \"%s\"", pErr.Err, err)
+	}
+}
+
+type testBrokenReader struct{}
+
+func (testBrokenReader) Read([]byte) (int, error) {
+	return 0, errors.New("reader error")
+}
+func TestErrorParseNoLine(t *testing.T) {
+	envMap, err := Parse(testBrokenReader{})
+	if err == nil {
+		t.Errorf("Expected error, got %v", envMap)
+	}
+
+	pErr, ok := err.(*ParseError)
+
+	if !ok {
+		t.Fatalf("expected to be ParseError, got %d", err)
+	}
+
+	if pErr.Line != 0 {
+		t.Fatalf("expected parse error line to be %d, got \"%s\"", 0, pErr)
+	}
+
+	if strings.Contains(strings.ToLower(err.Error()), "line") {
+		t.Fatalf("expected parse error not contain \"line\", got \"%s\"", pErr)
 	}
 }
 
