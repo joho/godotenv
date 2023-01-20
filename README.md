@@ -75,8 +75,8 @@ import _ "github.com/joho/godotenv/autoload"
 While `.env` in the project root is the default, you don't have to be constrained, both examples below are 100% legit
 
 ```go
-_ = godotenv.Load("somerandomfile")
-_ = godotenv.Load("filenumberone.env", "filenumbertwo.env")
+godotenv.Load("somerandomfile")
+godotenv.Load("filenumberone.env", "filenumbertwo.env")
 ```
 
 If you want to be really fancy with your env file you can do comments and exports (below is a valid env file)
