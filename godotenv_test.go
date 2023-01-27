@@ -131,7 +131,7 @@ func TestLoadDoesNotOverride(t *testing.T) {
 	loadEnvAndCompareValues(t, Load, envFileName, expectedValues, presets)
 }
 
-func TestOveroadDoesOverride(t *testing.T) {
+func TestOverloadDoesOverride(t *testing.T) {
 	envFileName := "fixtures/plain.env"
 
 	// ensure NO overload
@@ -357,11 +357,11 @@ func TestParsing(t *testing.T) {
 	// expect(env('FOO="bar\nbaz"')).to eql('FOO' => "bar\nbaz")
 	parseAndCompare(t, `FOO="bar\nbaz"`, "FOO", "bar\nbaz")
 
-	// it 'parses varibales with "." in the name' do
+	// it 'parses variables with "." in the name' do
 	// expect(env('FOO.BAR=foobar')).to eql('FOO.BAR' => 'foobar')
 	parseAndCompare(t, "FOO.BAR=foobar", "FOO.BAR", "foobar")
 
-	// it 'parses varibales with several "=" in the value' do
+	// it 'parses variables with several "=" in the value' do
 	// expect(env('FOO=foobar=')).to eql('FOO' => 'foobar=')
 	parseAndCompare(t, "FOO=foobar=", "FOO", "foobar=")
 
