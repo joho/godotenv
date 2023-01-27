@@ -250,15 +250,15 @@ func parseLine(line string, envMap map[string]string) (key string, value string,
 	}
 
 	if len(splitString) != 2 {
-		err = errors.New("Can't separate key from value")
+		err = errors.New("can't separate key from value")
 		return
 	}
 
 	// Parse the key
 	key = splitString[0]
-	if strings.HasPrefix(key, "export") {
-		key = strings.TrimPrefix(key, "export")
-	}
+
+	key = strings.TrimPrefix(key, "export")
+
 	key = strings.TrimSpace(key)
 
 	key = exportRegex.ReplaceAllString(splitString[0], "$1")
