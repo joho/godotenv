@@ -14,10 +14,10 @@
 package godotenv
 
 import (
-	"bufio"
 	"errors"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"os"
 	"os/exec"
 	"regexp"
@@ -27,6 +27,16 @@ import (
 )
 
 const doubleQuoteSpecialChars = "\\\n\r\"!$`"
+
+// Parse reads an env file from io.Reader, returning a map of keys and values.
+func Parse(r io.Reader) (map[string]string, error) {
+	data, err := ioutil.ReadAll(r)
+	if err != nil {
+		return nil, err
+	}
+
+	return UnmarshalBytes(data)
+}
 
 // Load will read your env file(s) and load them into ENV for this process.
 //
@@ -96,37 +106,17 @@ func Read(filenames ...string) (envMap map[string]string, err error) {
 	return
 }
 
-// Parse reads an env file from io.Reader, returning a map of keys and values.
-func Parse(r io.Reader) (envMap map[string]string, err error) {
-	envMap = make(map[string]string)
-
-	var lines []string
-	scanner := bufio.NewScanner(r)
-	for scanner.Scan() {
-		lines = append(lines, scanner.Text())
-	}
-
-	if err = scanner.Err(); err != nil {
-		return
-	}
-
-	for _, fullLine := range lines {
-		if !isIgnoredLine(fullLine) {
-			var key, value string
-			key, value, err = parseLine(fullLine, envMap)
-
-			if err != nil {
-				return
-			}
-			envMap[key] = value
-		}
-	}
-	return
-}
-
 // Unmarshal reads an env file from a string, returning a map of keys and values.
 func Unmarshal(str string) (envMap map[string]string, err error) {
-	return Parse(strings.NewReader(str))
+	return UnmarshalBytes([]byte(str))
+}
+
+// UnmarshalBytes parses env file from byte slice of chars, returning a map of keys and values.
+func UnmarshalBytes(src []byte) (map[string]string, error) {
+	out := make(map[string]string)
+	err := parseBytes(src, out)
+
+	return out, err
 }
 
 // Exec loads env vars from the specified filenames (empty map falls back to default)
@@ -137,7 +127,9 @@ func Unmarshal(str string) (envMap map[string]string, err error) {
 // If you want more fine grained control over your command it's recommended
 // that you use `Load()` or `Read()` and the `os/exec` package yourself.
 func Exec(filenames []string, cmd string, cmdArgs []string) error {
-	Load(filenames...)
+	if err := Load(filenames...); err != nil {
+		return err
+	}
 
 	command := exec.Command(cmd, cmdArgs...)
 	command.Stdin = os.Stdin
@@ -161,8 +153,7 @@ func Write(envMap map[string]string, filename string) error {
 	if err != nil {
 		return err
 	}
-	file.Sync()
-	return err
+	return file.Sync()
 }
 
 // Marshal outputs the given environment as a dotenv-formatted environment file.
@@ -202,7 +193,7 @@ func loadFile(filename string, overload bool) error {
 
 	for key, value := range envMap {
 		if !currentEnv[key] || overload {
-			os.Setenv(key, value)
+			_ = os.Setenv(key, value)
 		}
 	}
 
@@ -259,15 +250,15 @@ func parseLine(line string, envMap map[string]string) (key string, value string,
 	}
 
 	if len(splitString) != 2 {
-		err = errors.New("Can't separate key from value")
+		err = errors.New("can't separate key from value")
 		return
 	}
 
 	// Parse the key
 	key = splitString[0]
-	if strings.HasPrefix(key, "export") {
-		key = strings.TrimPrefix(key, "export")
-	}
+
+	key = strings.TrimPrefix(key, "export")
+
 	key = strings.TrimSpace(key)
 
 	key = exportRegex.ReplaceAllString(splitString[0], "$1")
@@ -341,11 +332,6 @@ func expandVariables(v string, m map[string]string) string {
 		}
 		return s
 	})
-}
-
-func isIgnoredLine(line string) bool {
-	trimmedLine := strings.TrimSpace(line)
-	return len(trimmedLine) == 0 || strings.HasPrefix(trimmedLine, "#")
 }
 
 func doubleQuoteEscape(line string) string {
