@@ -17,6 +17,7 @@ const (
 )
 
 func parseBytes(src []byte, out map[string]string) error {
+	src = bytes.Replace(src, []byte("\r\n"), []byte("\n"), -1)
 	cutset := src
 	for {
 		cutset = getStatementStart(cutset)
