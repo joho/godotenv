@@ -108,7 +108,15 @@ func Read(filenames ...string) (envMap map[string]string, err error) {
 
 // Unmarshal reads an env file from a string, returning a map of keys and values.
 func Unmarshal(str string) (envMap map[string]string, err error) {
-	return Parse(strings.NewReader(str))
+	return UnmarshalBytes([]byte(str))
+}
+
+// UnmarshalBytes parses env file from byte slice of chars, returning a map of keys and values.
+func UnmarshalBytes(src []byte) (map[string]string, error) {
+	out := make(map[string]string)
+	err := parseBytes(src, out)
+
+	return out, err
 }
 
 // Exec loads env vars from the specified filenames (empty map falls back to default)
