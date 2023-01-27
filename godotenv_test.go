@@ -461,6 +461,17 @@ func TestErrorParsing(t *testing.T) {
 	}
 }
 
+func TestComments(t *testing.T) {
+	envFileName := "fixtures/comments.env"
+	expectedValues := map[string]string{
+		"foo": "bar",
+		"bar": "foo#baz",
+		"baz": "foo",
+	}
+
+	loadEnvAndCompareValues(t, Load, envFileName, expectedValues, noopPresets)
+}
+
 func TestWrite(t *testing.T) {
 	writeAndCompare := func(env string, expected string) {
 		envMap, _ := Unmarshal(env)
