@@ -125,9 +125,13 @@ func UnmarshalBytes(src []byte) (map[string]string, error) {
 // Simply hooks up os.Stdin/err/out to the command and calls Run().
 //
 // If you want more fine grained control over your command it's recommended
-// that you use `Load()` or `Read()` and the `os/exec` package yourself.
-func Exec(filenames []string, cmd string, cmdArgs []string) error {
-	if err := Load(filenames...); err != nil {
+// that you use `Load()`, `Overload()` or `Read()` and the `os/exec` package yourself.
+func Exec(filenames []string, cmd string, cmdArgs []string, overload bool) error {
+	op := Load
+	if overload {
+		op = Overload
+	}
+	if err := op(filenames...); err != nil {
 		return err
 	}
 
