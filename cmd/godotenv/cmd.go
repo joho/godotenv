@@ -4,6 +4,9 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"os"
+	"os/exec"
+	"os/signal"
 
 	"strings"
 
@@ -43,12 +46,24 @@ example
 		envFilenames = strings.Split(rawEnvFilenames, ",")
 	}
 
+	if err := godotenv.Load(envFilenames...); err != nil {
+		log.Fatal(err)
+	}
+
 	// take rest of args and "exec" them
 	cmd := args[0]
 	cmdArgs := args[1:]
 
-	err := godotenv.Exec(envFilenames, cmd, cmdArgs)
-	if err != nil {
+	command := exec.Command(cmd, cmdArgs...)
+	command.Stdin = os.Stdin
+	command.Stdout = os.Stdout
+	command.Stderr = os.Stderr
+
+	// Ignore interrupts so we don't exit before the sub-process does.
+	// This signal will still get passed to the sub-process.
+	signal.Ignore(os.Interrupt)
+
+	if err := command.Run(); err != nil {
 		log.Fatal(err)
 	}
 }
