@@ -15,13 +15,15 @@ func main() {
 	flag.BoolVar(&showHelp, "h", false, "show help")
 	var rawEnvFilenames string
 	flag.StringVar(&rawEnvFilenames, "f", "", "comma separated paths to .env files")
+	var overload bool
+	flag.BoolVar(&overload, "o", false, "override existing .env variables")
 
 	flag.Parse()
 
 	usage := `
 Run a process with an env setup from a .env file
 
-godotenv [-f ENV_FILE_PATHS] COMMAND_ARGS
+godotenv [-o] [-f ENV_FILE_PATHS] COMMAND_ARGS
 
 ENV_FILE_PATHS: comma separated paths to .env files
 COMMAND_ARGS: command and args you want to run
@@ -47,7 +49,7 @@ example
 	cmd := args[0]
 	cmdArgs := args[1:]
 
-	err := godotenv.Exec(envFilenames, cmd, cmdArgs)
+	err := godotenv.Exec(envFilenames, cmd, cmdArgs, overload)
 	if err != nil {
 		log.Fatal(err)
 	}

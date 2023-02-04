@@ -153,6 +153,8 @@ godotenv -f /some/path/to/.env some_command with some args
 
 If you don't specify `-f` it will fall back on the default of loading `.env` in `PWD`
 
+By default, it won't override existing environment variables; you can do that with the `-o` flag.
+
 ### Writing Env Files
 
 Godotenv can also write a map representing the environment to a correctly-formatted and escaped file
