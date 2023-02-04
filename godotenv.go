@@ -14,10 +14,10 @@
 package godotenv
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"regexp"
@@ -30,12 +30,13 @@ const doubleQuoteSpecialChars = "\\\n\r\"!$`"
 
 // Parse reads an env file from io.Reader, returning a map of keys and values.
 func Parse(r io.Reader) (map[string]string, error) {
-	data, err := ioutil.ReadAll(r)
+	var buf bytes.Buffer
+	_, err := io.Copy(&buf, r)
 	if err != nil {
 		return nil, err
 	}
 
-	return UnmarshalBytes(data)
+	return UnmarshalBytes(buf.Bytes())
 }
 
 // Load will read your env file(s) and load them into ENV for this process.
