@@ -80,6 +80,7 @@ func TestReadPlainEnv(t *testing.T) {
 		"OPTION_E": "5",
 		"OPTION_F": "",
 		"OPTION_G": "",
+		"OPTION_H": "1 2",
 	}
 
 	envMap, err := Read(envFileName)
@@ -153,6 +154,7 @@ func TestLoadPlainEnv(t *testing.T) {
 		"OPTION_C": "3",
 		"OPTION_D": "4",
 		"OPTION_E": "5",
+		"OPTION_H": "1 2",
 	}
 
 	loadEnvAndCompareValues(t, Load, envFileName, expectedValues, noopPresets)
@@ -369,6 +371,9 @@ func TestParsing(t *testing.T) {
 	// expect(env('foo=bar ')).to eql('foo' => 'bar') # not 'bar '
 	parseAndCompare(t, "FOO=bar ", "FOO", "bar")
 
+	// unquoted internal whitespace is preserved
+	parseAndCompare(t, `KEY=value value`, "KEY", "value value")
+
 	// it 'ignores inline comments' do
 	// expect(env("foo=bar # this is foo")).to eql('foo' => 'bar')
 	parseAndCompare(t, "FOO=bar # this is foo", "FOO", "bar")
@@ -394,7 +399,7 @@ func TestParsing(t *testing.T) {
 	parseAndCompare(t, `KEY="`, "KEY", "\"")
 	parseAndCompare(t, `KEY="value`, "KEY", "\"value")
 
-	// leading whitespace should be ignored
+	// unquoted whitespace around keys should be ignored
 	parseAndCompare(t, " KEY =value", "KEY", "value")
 	parseAndCompare(t, "   KEY=value", "KEY", "value")
 	parseAndCompare(t, "\tKEY=value", "KEY", "value")
