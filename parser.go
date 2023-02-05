@@ -70,13 +70,7 @@ func getStatementStart(src []byte) []byte {
 // locateKeyName locates and parses key name and returns rest of slice
 func locateKeyName(src []byte) (key string, cutset []byte, err error) {
 	// trim "export" and space at beginning
-	// src = bytes.TrimLeftFunc(bytes.TrimPrefix(src, []byte(exportPrefix)), isSpace)
 	src = bytes.TrimLeftFunc(src, isSpace)
-	// exportPrefixEnd := len(exportPrefix) - 1
-	// if len(src) > exportPrefixEnd+2 && bytes.Equal(src[0:exportPrefixEnd], []byte(exportPrefix)) && bytes.IndexFunc(src[exportPrefixEnd:], isSpace) == 0 {
-	// 	src = src[exportPrefixEnd:]
-	// 	fmt.Println(src)
-	// }
 	if bytes.HasPrefix(src, []byte(exportPrefix)) {
 		trimmed := bytes.TrimPrefix(src, []byte(exportPrefix))
 		if bytes.IndexFunc(trimmed, isSpace) == 0 {
