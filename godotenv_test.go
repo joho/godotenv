@@ -547,16 +547,26 @@ func TestTrailingNewlines(t *testing.T) {
 			key:   "KEY",
 			value: "value value",
 		},
+		"YAML style - value with internal whitespace without trailing newline": {
+			input: "KEY: value value",
+			key:   "KEY",
+			value: "value value",
+		},
+		"YAML style - value with internal whitespace with trailing newline": {
+			input: "KEY: value value\n",
+			key:   "KEY",
+			value: "value value",
+		},
 	}
 
 	for n, c := range cases {
 		t.Run(n, func(t *testing.T) {
 			result, err := Unmarshal(c.input)
 			if err != nil {
-				t.Errorf("Unexpected error:\t%q", err)
+				t.Errorf("Input: %q Unexpected error:\t%q", c.input, err)
 			}
 			if result[c.key] != c.value {
-				t.Errorf("Expected:\t %q/%q\nGot:\t %#v", c.key, c.value, result)
+				t.Errorf("Input %q Expected:\t %q/%q\nGot:\t %q", c.input, c.key, c.value, result)
 			}
 		})
 	}
