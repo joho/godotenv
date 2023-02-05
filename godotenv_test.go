@@ -525,3 +525,39 @@ func TestRoundtrip(t *testing.T) {
 
 	}
 }
+
+func TestTrailingNewlines(t *testing.T) {
+	cases := map[string]struct {
+		input string
+		key   string
+		value string
+	}{
+		"Simple value without trailing newline": {
+			input: "KEY=value",
+			key:   "KEY",
+			value: "value",
+		},
+		"Value with internal whitespace without trailing newline": {
+			input: "KEY=value value",
+			key:   "KEY",
+			value: "value value",
+		},
+		"Value with internal whitespace with trailing newline": {
+			input: "KEY=value value\n",
+			key:   "KEY",
+			value: "value value",
+		},
+	}
+
+	for n, c := range cases {
+		t.Run(n, func(t *testing.T) {
+			result, err := Unmarshal(c.input)
+			if err != nil {
+				t.Errorf("Unexpected error:\t%q", err)
+			}
+			if result[c.key] != c.value {
+				t.Errorf("Expected:\t %q/%q\nGot:\t %#v", c.key, c.value, result)
+			}
+		})
+	}
+}
