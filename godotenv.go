@@ -215,6 +215,7 @@ func readFile(filename string) (envMap map[string]string, err error) {
 	return Parse(file)
 }
 
+// removes "export " if present and trims whitespace
 var exportRegex = regexp.MustCompile(`^\s*(?:export\s+)?(.*?)\s*$`)
 
 func parseLine(line string, envMap map[string]string) (key string, value string, err error) {
@@ -281,7 +282,6 @@ var (
 )
 
 func parseValue(value string, envMap map[string]string) string {
-
 	// trim
 	value = strings.Trim(value, " ")
 
