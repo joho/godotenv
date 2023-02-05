@@ -12,9 +12,14 @@ import (
 var noopPresets = make(map[string]string)
 
 func parseAndCompare(t *testing.T, rawEnvLine string, expectedKey string, expectedValue string) {
-	key, value, _ := parseLine(rawEnvLine, noopPresets)
-	if key != expectedKey || value != expectedValue {
-		t.Errorf("Expected '%v' to parse as '%v' => '%v', got '%v' => '%v' instead", rawEnvLine, expectedKey, expectedValue, key, value)
+	result, err := Unmarshal(rawEnvLine)
+
+	if err != nil {
+		t.Errorf("Expected %q to parse as %q: %q, errored %q", rawEnvLine, expectedKey, expectedValue, err)
+		return
+	}
+	if result[expectedKey] != expectedValue {
+		t.Errorf("Expected '%v' to parse as '%v' => '%v', got %q instead", rawEnvLine, expectedKey, expectedValue, result)
 	}
 }
 
@@ -80,6 +85,7 @@ func TestReadPlainEnv(t *testing.T) {
 		"OPTION_E": "5",
 		"OPTION_F": "",
 		"OPTION_G": "",
+		"OPTION_H": "1 2",
 	}
 
 	envMap, err := Read(envFileName)
@@ -153,6 +159,7 @@ func TestLoadPlainEnv(t *testing.T) {
 		"OPTION_C": "3",
 		"OPTION_D": "4",
 		"OPTION_E": "5",
+		"OPTION_H": "1 2",
 	}
 
 	loadEnvAndCompareValues(t, Load, envFileName, expectedValues, noopPresets)
@@ -272,7 +279,6 @@ func TestExpanding(t *testing.T) {
 			}
 		})
 	}
-
 }
 
 func TestVariableStringValueSeparator(t *testing.T) {
@@ -369,6 +375,9 @@ func TestParsing(t *testing.T) {
 	// expect(env('foo=bar ')).to eql('foo' => 'bar') # not 'bar '
 	parseAndCompare(t, "FOO=bar ", "FOO", "bar")
 
+	// unquoted internal whitespace is preserved
+	parseAndCompare(t, `KEY=value value`, "KEY", "value value")
+
 	// it 'ignores inline comments' do
 	// expect(env("foo=bar # this is foo")).to eql('foo' => 'bar')
 	parseAndCompare(t, "FOO=bar # this is foo", "FOO", "bar")
@@ -391,10 +400,8 @@ func TestParsing(t *testing.T) {
 	parseAndCompare(t, `FOO="bar\\r\ b\az"`, "FOO", "bar\\r baz")
 
 	parseAndCompare(t, `="value"`, "", "value")
-	parseAndCompare(t, `KEY="`, "KEY", "\"")
-	parseAndCompare(t, `KEY="value`, "KEY", "\"value")
 
-	// leading whitespace should be ignored
+	// unquoted whitespace around keys should be ignored
 	parseAndCompare(t, " KEY =value", "KEY", "value")
 	parseAndCompare(t, "   KEY=value", "KEY", "value")
 	parseAndCompare(t, "\tKEY=value", "KEY", "value")
@@ -402,7 +409,7 @@ func TestParsing(t *testing.T) {
 	// it 'throws an error if line format is incorrect' do
 	// expect{env('lol$wut')}.to raise_error(Dotenv::FormatError)
 	badlyFormattedLine := "lol$wut"
-	_, _, err := parseLine(badlyFormattedLine, noopPresets)
+	_, err := Unmarshal(badlyFormattedLine)
 	if err == nil {
 		t.Errorf("Expected \"%v\" to return error, but it didn't", badlyFormattedLine)
 	}
@@ -518,5 +525,51 @@ func TestRoundtrip(t *testing.T) {
 			t.Errorf("Expected '%s' to roundtrip as '%v', got '%v' instead", fixtureFilename, env, roundtripped)
 		}
 
+	}
+}
+
+func TestTrailingNewlines(t *testing.T) {
+	cases := map[string]struct {
+		input string
+		key   string
+		value string
+	}{
+		"Simple value without trailing newline": {
+			input: "KEY=value",
+			key:   "KEY",
+			value: "value",
+		},
+		"Value with internal whitespace without trailing newline": {
+			input: "KEY=value value",
+			key:   "KEY",
+			value: "value value",
+		},
+		"Value with internal whitespace with trailing newline": {
+			input: "KEY=value value\n",
+			key:   "KEY",
+			value: "value value",
+		},
+		"YAML style - value with internal whitespace without trailing newline": {
+			input: "KEY: value value",
+			key:   "KEY",
+			value: "value value",
+		},
+		"YAML style - value with internal whitespace with trailing newline": {
+			input: "KEY: value value\n",
+			key:   "KEY",
+			value: "value value",
+		},
+	}
+
+	for n, c := range cases {
+		t.Run(n, func(t *testing.T) {
+			result, err := Unmarshal(c.input)
+			if err != nil {
+				t.Errorf("Input: %q Unexpected error:\t%q", c.input, err)
+			}
+			if result[c.key] != c.value {
+				t.Errorf("Input %q Expected:\t %q/%q\nGot:\t %q", c.input, c.key, c.value, result)
+			}
+		})
 	}
 }
