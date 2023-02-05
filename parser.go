@@ -70,7 +70,19 @@ func getStatementStart(src []byte) []byte {
 // locateKeyName locates and parses key name and returns rest of slice
 func locateKeyName(src []byte) (key string, cutset []byte, err error) {
 	// trim "export" and space at beginning
-	src = bytes.TrimLeftFunc(bytes.TrimPrefix(src, []byte(exportPrefix)), isSpace)
+	// src = bytes.TrimLeftFunc(bytes.TrimPrefix(src, []byte(exportPrefix)), isSpace)
+	src = bytes.TrimLeftFunc(src, isSpace)
+	// exportPrefixEnd := len(exportPrefix) - 1
+	// if len(src) > exportPrefixEnd+2 && bytes.Equal(src[0:exportPrefixEnd], []byte(exportPrefix)) && bytes.IndexFunc(src[exportPrefixEnd:], isSpace) == 0 {
+	// 	src = src[exportPrefixEnd:]
+	// 	fmt.Println(src)
+	// }
+	if bytes.HasPrefix(src, []byte(exportPrefix)) {
+		trimmed := bytes.TrimPrefix(src, []byte(exportPrefix))
+		if bytes.IndexFunc(trimmed, isSpace) == 0 {
+			src = bytes.TrimLeftFunc(trimmed, isSpace)
+		}
+	}
 
 	// locate key name end and validate it in single loop
 	offset := 0
@@ -119,7 +131,11 @@ func extractVarValue(src []byte, vars map[string]string) (value string, rest []b
 
 		// Hit EOF without a trailing newline
 		if endOfLine == -1 {
-			return expandVariables(string(src), vars), nil, nil
+			endOfLine = len(src)
+
+			if endOfLine == 0 {
+				return "", nil, nil
+			}
 		}
 
 		// Convert line to rune away to do accurate countback of runes
@@ -127,19 +143,24 @@ func extractVarValue(src []byte, vars map[string]string) (value string, rest []b
 
 		// Assume end of line is end of var
 		endOfVar := len(line)
+		if endOfVar == 0 {
+			return "", src[endOfLine:], nil
+		}
 
 		// Work backwards to check if the line ends in whitespace then
 		// a comment (ie asdasd # some comment)
 		for i := endOfVar - 1; i >= 0; i-- {
 			if line[i] == charComment && i > 0 {
 				if isSpace(line[i-1]) {
-					endOfVar = i - 1
+					endOfVar = i
 					break
 				}
 			}
 		}
 
-		return expandVariables(string(line[0:endOfVar]), vars), src[endOfLine:], nil
+		trimmed := strings.TrimFunc(string(line[0:endOfVar]), isSpace)
+
+		return expandVariables(trimmed, vars), src[endOfLine:], nil
 	}
 
 	// lookup quoted string terminator

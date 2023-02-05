@@ -12,8 +12,12 @@ import (
 var noopPresets = make(map[string]string)
 
 func parseAndCompare(t *testing.T, rawEnvLine string, expectedKey string, expectedValue string) {
-	result, _ := Unmarshal(rawEnvLine)
+	result, err := Unmarshal(rawEnvLine)
 
+	if err != nil {
+		t.Errorf("Expected %q to parse as %q: %q, errored %q", rawEnvLine, expectedKey, expectedValue, err)
+		return
+	}
 	if result[expectedKey] != expectedValue {
 		t.Errorf("Expected '%v' to parse as '%v' => '%v', got %q instead", rawEnvLine, expectedKey, expectedValue, result)
 	}
