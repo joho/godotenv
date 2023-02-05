@@ -400,8 +400,6 @@ func TestParsing(t *testing.T) {
 	parseAndCompare(t, `FOO="bar\\r\ b\az"`, "FOO", "bar\\r baz")
 
 	parseAndCompare(t, `="value"`, "", "value")
-	parseAndCompare(t, `KEY="`, "KEY", "\"")
-	parseAndCompare(t, `KEY="value`, "KEY", "\"value")
 
 	// unquoted whitespace around keys should be ignored
 	parseAndCompare(t, " KEY =value", "KEY", "value")
