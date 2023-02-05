@@ -114,13 +114,32 @@ loop:
 func extractVarValue(src []byte, vars map[string]string) (value string, rest []byte, err error) {
 	quote, hasPrefix := hasQuotePrefix(src)
 	if !hasPrefix {
-		// unquoted value - read until whitespace
-		end := bytes.IndexFunc(src, unicode.IsSpace)
-		if end == -1 {
+		// unquoted value - read until end of line
+		endOfLine := bytes.IndexFunc(src, isLineEnd)
+
+		// Hit EOF without a trailing newline
+		if endOfLine == -1 {
 			return expandVariables(string(src), vars), nil, nil
 		}
 
-		return expandVariables(string(src[0:end]), vars), src[end:], nil
+		// Convert line to rune away to do accurate countback of runes
+		line := []rune(string(src[0:endOfLine]))
+
+		// Assume end of line is end of var
+		endOfVar := len(line)
+
+		// Work backwards to check if the line ends in whitespace then
+		// a comment (ie asdasd # some comment)
+		for i := endOfVar - 1; i >= 0; i-- {
+			if line[i] == charComment && i > 0 {
+				if isSpace(line[i-1]) {
+					endOfVar = i - 1
+					break
+				}
+			}
+		}
+
+		return expandVariables(string(line[0:endOfVar]), vars), src[endOfLine:], nil
 	}
 
 	// lookup quoted string terminator
@@ -202,6 +221,13 @@ func isCharFunc(char rune) func(rune) bool {
 func isSpace(r rune) bool {
 	switch r {
 	case '\t', '\v', '\f', '\r', ' ', 0x85, 0xA0:
+		return true
+	}
+	return false
+}
+
+func isLineEnd(r rune) bool {
+	if r == '\n' || r == '\r' {
 		return true
 	}
 	return false
