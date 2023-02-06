@@ -4,7 +4,6 @@ import (
 	"flag"
 	"fmt"
 	"log"
-
 	"strings"
 
 	"github.com/joho/godotenv"
