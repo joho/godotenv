@@ -236,10 +236,7 @@ func isSpace(r rune) bool {
 }
 
 func isLineEnd(r rune) bool {
-	if r == '\n' || r == '\r' {
-		return true
-	}
-	return false
+	return r == '\n' || r == '\r'
 }
 
 var (
