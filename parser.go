@@ -44,7 +44,7 @@ func parseBytes(src []byte, out map[string]string) error {
 	return nil
 }
 
-// getStatementPosition returns position of statement begin.
+// getStatementStart returns position of statement begin.
 //
 // It skips any comment line or non-whitespace character.
 func getStatementStart(src []byte) []byte {
