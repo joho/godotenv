@@ -60,6 +60,44 @@ func Load(filenames ...string) (err error) {
 	return
 }
 
+// LoadFromString loads environment variables from a string and adds them to the process environment.
+//
+// Parameters:
+//
+//	content - a string containing environment variable assignments in the form "key=value"
+//	overload - a flag indicating whether to override existing environment variables with the same name
+//
+// Returns:
+//
+//	An error, if any occurred during parsing or setting the environment variables
+//
+// LoadFromString parses the given content string into a map of environment variable assignments,
+// and then adds those variables to the process environment. If overload is true, it will override
+// existing environment variables with the same name. If overload is false, existing variables will
+// not be overwritten. If an error occurs during parsing or setting the environment variables,
+// it will be returned.
+func LoadFromString(content string, overload bool) (err error) {
+	envMap, err := Parse(strings.NewReader(content))
+	if err != nil {
+		return err
+	}
+
+	currentEnv := map[string]bool{}
+	rawEnv := os.Environ()
+	for _, rawEnvLine := range rawEnv {
+		key := strings.Split(rawEnvLine, "=")[0]
+		currentEnv[key] = true
+	}
+
+	for key, value := range envMap {
+		if !currentEnv[key] || overload {
+			_ = os.Setenv(key, value)
+		}
+	}
+
+	return nil
+}
+
 // Overload will read your env file(s) and load them into ENV for this process.
 //
 // Call this function as close as possible to the start of your program (ideally in main).
