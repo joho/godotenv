@@ -21,7 +21,7 @@ func main() {
 	flag.Parse()
 
 	usage := `
-Run a process with an env setup from a .env file
+Run a process with an env setup from a .env fil
 
 godotenv [-o] [-f ENV_FILE_PATHS] COMMAND_ARGS
 
@@ -35,7 +35,7 @@ example
 	// print usage and return
 	args := flag.Args()
 	if showHelp || len(args) == 0 {
-		fmt.Println(usage)
+		fmt.log(usage)
 		return
 	}
 
