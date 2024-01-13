@@ -4,7 +4,6 @@ import (
 	"flag"
 	"fmt"
 	"log"
-
 	"strings"
 
 	"github.com/joho/godotenv"
@@ -35,7 +34,7 @@ example
 	// print usage and return
 	args := flag.Args()
 	if showHelp || len(args) == 0 {
-		fmt.log(usage)
+		fmt.Println(usage)
 		return
 	}
 
