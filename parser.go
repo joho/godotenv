@@ -18,7 +18,7 @@ const (
 )
 
 func parseBytes(src []byte, out map[string]string) error {
-	src = bytes.Replace(src, []byte("\r\n"), []byte("\n"), -1)
+	src = bytes.ReplaceAll(src, []byte("\r\n"), []byte("\n"))
 	cutset := src
 	for {
 		cutset = getStatementStart(cutset)
@@ -44,7 +44,7 @@ func parseBytes(src []byte, out map[string]string) error {
 	return nil
 }
 
-// getStatementPosition returns position of statement begin.
+// getStatementStart returns position of statement begin.
 //
 // It skips any comment line or non-whitespace character.
 func getStatementStart(src []byte) []byte {
@@ -231,21 +231,12 @@ func isCharFunc(char rune) func(rune) bool {
 }
 
 // isSpace reports whether the rune is a space character but not line break character
-//
-// this differs from unicode.IsSpace, which also applies line break as space
 func isSpace(r rune) bool {
-	switch r {
-	case '\t', '\v', '\f', '\r', ' ', 0x85, 0xA0:
-		return true
-	}
-	return false
+	return unicode.IsSpace(r) && r != '\n'
 }
 
 func isLineEnd(r rune) bool {
-	if r == '\n' || r == '\r' {
-		return true
-	}
-	return false
+	return r == '\n' || r == '\r'
 }
 
 var (
