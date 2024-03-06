@@ -2,6 +2,7 @@ package godotenv
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"os"
 	"reflect"
@@ -582,42 +583,42 @@ func TestWhitespace(t *testing.T) {
 	}{
 		"Leading whitespace": {
 			input: " A=a\n",
-			key: "A",
+			key:   "A",
 			value: "a",
 		},
 		"Leading tab": {
 			input: "\tA=a\n",
-			key: "A",
+			key:   "A",
 			value: "a",
 		},
 		"Leading mixed whitespace": {
 			input: " \t \t\n\t \t A=a\n",
-			key: "A",
+			key:   "A",
 			value: "a",
 		},
 		"Leading whitespace before export": {
 			input: " \t\t export    A=a\n",
-			key: "A",
+			key:   "A",
 			value: "a",
 		},
 		"Trailing whitespace": {
 			input: "A=a \t \t\n",
-			key: "A",
+			key:   "A",
 			value: "a",
 		},
 		"Trailing whitespace with export": {
 			input: "export A=a\t \t \n",
-			key: "A",
+			key:   "A",
 			value: "a",
 		},
 		"No EOL": {
 			input: "A=a",
-			key: "A",
+			key:   "A",
 			value: "a",
 		},
 		"Trailing whitespace with no EOL": {
 			input: "A=a ",
-			key: "A",
+			key:   "A",
 			value: "a",
 		},
 	}
@@ -630,6 +631,31 @@ func TestWhitespace(t *testing.T) {
 			}
 			if result[c.key] != c.value {
 				t.Errorf("Input %q Expected:\t %q/%q\nGot:\t %q", c.input, c.key, c.value, result)
+			}
+		})
+	}
+}
+
+func TestParserErrors(t *testing.T) {
+	cases := map[string]struct {
+		input string
+		err   error
+	}{
+		"Invalid char": {
+			input: "foo-1=bar",
+			err:   ErrUnexpectedChar,
+		},
+		"UnterminatedQuote": {
+			input: "foo=\"bar",
+			err:   ErrUnterminatedQuote,
+		},
+	}
+
+	for n, c := range cases {
+		t.Run(n, func(t *testing.T) {
+			v, err := Unmarshal(c.input)
+			if !errors.Is(err, c.err) {
+				t.Errorf("Input: %q Expected:\t %q\nGot:\t %q Val: %v", c.input, c.err, err, v)
 			}
 		})
 	}
