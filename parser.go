@@ -17,6 +17,12 @@ const (
 	exportPrefix = "export"
 )
 
+var (
+	ErrZeroLengthString  = errors.New("zero length string")
+	ErrUnexpectedChar    = errors.New("unexpected character")
+	ErrUnterminatedQuote = errors.New("unterminated quoted value")
+)
+
 func parseBytes(src []byte, out map[string]string) error {
 	src = bytes.Replace(src, []byte("\r\n"), []byte("\n"), -1)
 	cutset := src
@@ -101,13 +107,14 @@ loop:
 			}
 
 			return "", nil, fmt.Errorf(
-				`unexpected character %q in variable name near %q`,
+				`%w %q in variable name near %q`,
+				ErrUnexpectedChar,
 				string(char), string(src))
 		}
 	}
 
 	if len(src) == 0 {
-		return "", nil, errors.New("zero length string")
+		return "", nil, ErrZeroLengthString
 	}
 
 	// trim whitespace
@@ -186,7 +193,7 @@ func extractVarValue(src []byte, vars map[string]string) (value string, rest []b
 		valEndIndex = len(src)
 	}
 
-	return "", nil, fmt.Errorf("unterminated quoted value %s", src[:valEndIndex])
+	return "", nil, fmt.Errorf("%w %s", ErrUnterminatedQuote, src[:valEndIndex])
 }
 
 func expandEscapes(str string) string {
