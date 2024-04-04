@@ -1,3 +1,2 @@
-module github.com/harness/godotenv/v2
-
+module github.com/harness/godotenv/v3
 go 1.12

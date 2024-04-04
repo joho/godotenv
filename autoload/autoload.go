@@ -8,7 +8,7 @@ package autoload
 	And bob's your mother's brother
 */
 
-import "github.com/joho/godotenv"
+import "github.com/harness/godotenv/v3"
 
 func init() {
 	godotenv.Load()
