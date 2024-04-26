@@ -4,7 +4,10 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"os"
+	"os/exec"
 	"regexp"
+	"runtime"
 	"strings"
 	"unicode"
 )
@@ -255,17 +258,68 @@ var (
 )
 
 func expandVariables(v string, m map[string]string) string {
-	return expandVarRegex.ReplaceAllStringFunc(v, func(s string) string {
-		submatch := expandVarRegex.FindStringSubmatch(s)
+	expanded := expandVarRegex.ReplaceAllStringFunc(v, func(s string) string {
+		matched := expandVarRegex.FindStringSubmatch(s)
 
-		if submatch == nil {
+		if matched == nil {
 			return s
 		}
-		if submatch[1] == "\\" || submatch[2] == "(" {
-			return submatch[0][1:]
-		} else if submatch[4] != "" {
-			return m[submatch[4]]
+		if matched[1] == "\\" || matched[2] == "(" {
+			return matched[0][1:]
+		} else if matched[4] != "" {
+			return m[matched[4]]
 		}
 		return s
 	})
+
+	if shouldEvaluateEmbeddedCommands {
+		expanded = evaluateEmbeddedCommand(expanded)
+	}
+
+	return expanded
+}
+
+const (
+	cmdSuffix = ")"
+	cmdPrefix = "$("
+)
+
+func evaluateEmbeddedCommand(value string) string {
+	if !(strings.HasPrefix(value, cmdPrefix) && strings.HasSuffix(value, cmdSuffix)) {
+		return value
+	}
+
+	value = strings.TrimSuffix(strings.TrimPrefix(value, cmdPrefix), cmdSuffix)
+
+	shell, args := assembleEmbeddedCommand(value)
+	command := exec.Command(shell, args...)
+
+	if output, err := command.Output(); err == nil {
+		value = strings.Trim(string(output), " \n\r\t")
+	} else {
+		panic(err)
+	}
+
+	return value
+}
+
+func assembleEmbeddedCommand(value string) (string, []string) {
+	var shell string = "/bin/sh"
+	var flags []string = []string{"-c", value}
+
+	if envShell, ok := os.LookupEnv("GOENV_SHELL"); ok && 0 < len(envShell) {
+		parts := strings.Split(envShell, " ")
+		shell = parts[0]
+		flags = append(parts[1:], value)
+	} else if runtime.GOOS == "windows" {
+		shell = "cmd"
+	}
+
+	if resolved, err := exec.LookPath(shell); err == nil {
+		shell = resolved
+	} else {
+		panic(err)
+	}
+
+	return shell, flags
 }

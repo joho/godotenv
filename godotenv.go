@@ -26,6 +26,22 @@ import (
 
 const doubleQuoteSpecialChars = "\\\n\r\"!$`"
 
+var shouldEvaluateEmbeddedCommands bool = false
+
+// EnableEmbeddedCommandEvaluation must be called before calling functions
+// like Load or Parse on a target if you want values containing embedded
+// commands to be evaluated
+func EnableEmbeddedCommandEvaluation() {
+	shouldEvaluateEmbeddedCommands = true
+}
+
+// DisableEmbeddedCommandEvaluation can be called before calling functions
+// like Load or Parse on a target to ensure that values containing embedded
+// commands are not evaluated but instead passed straight through as strings
+func DisableEmbeddedCommandEvaluation() {
+	shouldEvaluateEmbeddedCommands = false
+}
+
 // Parse reads an env file from io.Reader, returning a map of keys and values.
 func Parse(r io.Reader) (map[string]string, error) {
 	var buf bytes.Buffer
