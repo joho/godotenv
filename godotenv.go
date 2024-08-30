@@ -19,8 +19,8 @@ import (
 	"io"
 	"os"
 	"os/exec"
+	"regexp"
 	"sort"
-	"strconv"
 	"strings"
 )
 
@@ -163,9 +163,10 @@ func Write(envMap map[string]string, filename string) error {
 // Each line is in the format: KEY="VALUE" where VALUE is backslash-escaped.
 func Marshal(envMap map[string]string) (string, error) {
 	lines := make([]string, 0, len(envMap))
+    var isInt = regexp.MustCompile(`^[0-9]+$`).MatchString
 	for k, v := range envMap {
-		if d, err := strconv.Atoi(v); err == nil {
-			lines = append(lines, fmt.Sprintf(`%s=%d`, k, d))
+		if isInt(v) {
+			lines = append(lines, fmt.Sprintf(`%s=%s`, k, v))
 		} else {
 			lines = append(lines, fmt.Sprintf(`%s="%s"`, k, doubleQuoteEscape(v)))
 		}
