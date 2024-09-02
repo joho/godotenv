@@ -479,6 +479,26 @@ func TestComments(t *testing.T) {
 	loadEnvAndCompareValues(t, Load, envFileName, expectedValues, noopPresets)
 }
 
+func TestIsInt(t *testing.T) {
+    checkAndCompare := func(s string, expected bool) {
+        if isInt(s) != expected {
+            t.Fail()
+        }
+    }
+
+    // invalid values
+    checkAndCompare("", false)
+    checkAndCompare("+123", false)
+    checkAndCompare("+12a3", false)
+    checkAndCompare("12a3", false)
+    checkAndCompare("abc", false)
+    checkAndCompare("12 3", false)
+
+    // valid values
+    checkAndCompare("-123", true)
+    checkAndCompare("123", true)
+}
+
 func TestWrite(t *testing.T) {
 	writeAndCompare := func(env string, expected string) {
 		envMap, _ := Unmarshal(env)
