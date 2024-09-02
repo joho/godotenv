@@ -160,10 +160,10 @@ func Write(envMap map[string]string, filename string) error {
 }
 
 func isInt(s string) bool {
+    s = strings.TrimPrefix(s, "-")
+
     if len(s) == 0 {
 		return false
-	} else if s[0] == '-' {
-		s = s[1:]
 	}
 
 	for _, r := range s {

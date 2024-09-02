@@ -493,6 +493,8 @@ func TestIsInt(t *testing.T) {
     checkAndCompare("12a3", false)
     checkAndCompare("abc", false)
     checkAndCompare("12 3", false)
+    checkAndCompare("-", false)
+    checkAndCompare(" ", false)
 
     // valid values
     checkAndCompare("-123", true)
