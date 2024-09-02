@@ -158,18 +158,21 @@ func Write(envMap map[string]string, filename string) error {
 	return file.Sync()
 }
 
+// isInt checks if the string may be serialized as a number value, leading
+// "-" symbol is allowed for negative numbers, leading "+" sign is not. The
+// length of the value is not limited.
 func isInt(s string) bool {
-    s = strings.TrimPrefix(s, "-")
+	s = strings.TrimPrefix(s, "-")
 
-    if len(s) == 0 {
+	if len(s) == 0 {
 		return false
 	}
 
 	for _, r := range s {
-        if '0' <= r && r <= '9' {
-            continue
-        }
-        return false
+		if '0' <= r && r <= '9' {
+			continue
+		}
+		return false
 	}
 
 	return true
