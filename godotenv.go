@@ -21,7 +21,6 @@ import (
 	"os/exec"
 	"sort"
 	"strings"
-	"unicode"
 )
 
 const doubleQuoteSpecialChars = "\\\n\r\"!$`"
@@ -167,9 +166,10 @@ func isInt(s string) bool {
 	}
 
 	for _, r := range s {
-		if !unicode.IsDigit(r) {
-			return false
-		}
+        if '0' <= r && r <= '9' {
+            continue
+        }
+        return false
 	}
 
 	return true
