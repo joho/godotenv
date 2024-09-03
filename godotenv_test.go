@@ -499,6 +499,8 @@ func TestIsInt(t *testing.T) {
 	// valid values
 	checkAndCompare("-123", true)
 	checkAndCompare("123", true)
+	checkAndCompare("-922337203685477580868712", true)
+	checkAndCompare("922337203685477580837281", true)
 }
 
 func TestWrite(t *testing.T) {
