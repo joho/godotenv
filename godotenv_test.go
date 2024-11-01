@@ -485,6 +485,30 @@ func TestComments(t *testing.T) {
 	loadEnvAndCompareValues(t, Load, envFileName, expectedValues, noopPresets)
 }
 
+func TestIsInt(t *testing.T) {
+	checkAndCompare := func(s string, expected bool) {
+		if isInt(s) != expected {
+			t.Fail()
+		}
+	}
+
+	// invalid values
+	checkAndCompare("", false)
+	checkAndCompare("+123", false)
+	checkAndCompare("+12a3", false)
+	checkAndCompare("12a3", false)
+	checkAndCompare("abc", false)
+	checkAndCompare("12 3", false)
+	checkAndCompare("-", false)
+	checkAndCompare(" ", false)
+
+	// valid values
+	checkAndCompare("-123", true)
+	checkAndCompare("123", true)
+	checkAndCompare("-922337203685477580868712", true)
+	checkAndCompare("922337203685477580837281", true)
+}
+
 func TestWrite(t *testing.T) {
 	writeAndCompare := func(env string, expected string) {
 		envMap, _ := Unmarshal(env)
@@ -588,42 +612,42 @@ func TestWhitespace(t *testing.T) {
 	}{
 		"Leading whitespace": {
 			input: " A=a\n",
-			key: "A",
+			key:   "A",
 			value: "a",
 		},
 		"Leading tab": {
 			input: "\tA=a\n",
-			key: "A",
+			key:   "A",
 			value: "a",
 		},
 		"Leading mixed whitespace": {
 			input: " \t \t\n\t \t A=a\n",
-			key: "A",
+			key:   "A",
 			value: "a",
 		},
 		"Leading whitespace before export": {
 			input: " \t\t export    A=a\n",
-			key: "A",
+			key:   "A",
 			value: "a",
 		},
 		"Trailing whitespace": {
 			input: "A=a \t \t\n",
-			key: "A",
+			key:   "A",
 			value: "a",
 		},
 		"Trailing whitespace with export": {
 			input: "export A=a\t \t \n",
-			key: "A",
+			key:   "A",
 			value: "a",
 		},
 		"No EOL": {
 			input: "A=a",
-			key: "A",
+			key:   "A",
 			value: "a",
 		},
 		"Trailing whitespace with no EOL": {
 			input: "A=a ",
-			key: "A",
+			key:   "A",
 			value: "a",
 		},
 	}
