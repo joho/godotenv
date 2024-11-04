@@ -19,6 +19,8 @@ const (
 )
 
 func parseBytes(src []byte, out map[string]string) error {
+	// skip YAML document delimiter
+	src = bytes.Replace(src, []byte("---\n"), []byte("\n"), -1)
 	src = bytes.Replace(src, []byte("\r\n"), []byte("\n"), -1)
 	cutset := src
 	for {
