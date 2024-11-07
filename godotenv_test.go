@@ -134,7 +134,23 @@ func TestLoadDoesNotOverride(t *testing.T) {
 		"OPTION_A": "do_not_override",
 		"OPTION_B": "",
 	}
+
 	loadEnvAndCompareValues(t, Load, envFileName, expectedValues, presets)
+
+}
+
+func TestReadDoesNotOverride(t *testing.T) {
+	envFileName := "fixtures/plain.env"
+	overrideEnvName := "fixtures/read_overrides.env"
+
+	envMap, err := Read(envFileName, overrideEnvName)
+	if err != nil {
+		t.Error("Error reading file")
+	}
+
+	if envMap["OPTION_A"] != "1" {
+		t.Error("Read falsely overrode OPTION_A")
+	}
 }
 
 func TestOverloadDoesOverride(t *testing.T) {
@@ -588,42 +604,42 @@ func TestWhitespace(t *testing.T) {
 	}{
 		"Leading whitespace": {
 			input: " A=a\n",
-			key: "A",
+			key:   "A",
 			value: "a",
 		},
 		"Leading tab": {
 			input: "\tA=a\n",
-			key: "A",
+			key:   "A",
 			value: "a",
 		},
 		"Leading mixed whitespace": {
 			input: " \t \t\n\t \t A=a\n",
-			key: "A",
+			key:   "A",
 			value: "a",
 		},
 		"Leading whitespace before export": {
 			input: " \t\t export    A=a\n",
-			key: "A",
+			key:   "A",
 			value: "a",
 		},
 		"Trailing whitespace": {
 			input: "A=a \t \t\n",
-			key: "A",
+			key:   "A",
 			value: "a",
 		},
 		"Trailing whitespace with export": {
 			input: "export A=a\t \t \n",
-			key: "A",
+			key:   "A",
 			value: "a",
 		},
 		"No EOL": {
 			input: "A=a",
-			key: "A",
+			key:   "A",
 			value: "a",
 		},
 		"Trailing whitespace with no EOL": {
 			input: "A=a ",
-			key: "A",
+			key:   "A",
 			value: "a",
 		},
 	}
