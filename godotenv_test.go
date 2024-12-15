@@ -479,6 +479,7 @@ func TestComments(t *testing.T) {
 	expectedValues := map[string]string{
 		"qux":  "thud",
 		"thud": "fred#qux",
+		"fred": "qux#baz",
 		"foo":  "bar",
 		"bar":  "foo#baz",
 		"baz":  "foo",

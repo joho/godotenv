@@ -143,7 +143,7 @@ func extractVarValue(src []byte, vars map[string]string) (value string, rest []b
 		}
 
 		// Work backwards to check if the line ends in whitespace then
-		// a comment (ie asdasd # some comment # other)
+		// a comment, ie: foo=bar # baz # other
 		for i := 0; i < endOfVar; i++ {
 			if line[i] == charComment && i < endOfVar {
 				if isSpace(line[i-1]) {
