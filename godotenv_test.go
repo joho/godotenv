@@ -477,9 +477,12 @@ func TestErrorParsing(t *testing.T) {
 func TestComments(t *testing.T) {
 	envFileName := "fixtures/comments.env"
 	expectedValues := map[string]string{
-		"foo": "bar",
-		"bar": "foo#baz",
-		"baz": "foo",
+		"qux":  "thud",
+		"thud": "fred#qux",
+		"fred": "qux#baz",
+		"foo":  "bar",
+		"bar":  "foo#baz",
+		"baz":  "foo",
 	}
 
 	loadEnvAndCompareValues(t, Load, envFileName, expectedValues, noopPresets)
@@ -588,42 +591,42 @@ func TestWhitespace(t *testing.T) {
 	}{
 		"Leading whitespace": {
 			input: " A=a\n",
-			key: "A",
+			key:   "A",
 			value: "a",
 		},
 		"Leading tab": {
 			input: "\tA=a\n",
-			key: "A",
+			key:   "A",
 			value: "a",
 		},
 		"Leading mixed whitespace": {
 			input: " \t \t\n\t \t A=a\n",
-			key: "A",
+			key:   "A",
 			value: "a",
 		},
 		"Leading whitespace before export": {
 			input: " \t\t export    A=a\n",
-			key: "A",
+			key:   "A",
 			value: "a",
 		},
 		"Trailing whitespace": {
 			input: "A=a \t \t\n",
-			key: "A",
+			key:   "A",
 			value: "a",
 		},
 		"Trailing whitespace with export": {
 			input: "export A=a\t \t \n",
-			key: "A",
+			key:   "A",
 			value: "a",
 		},
 		"No EOL": {
 			input: "A=a",
-			key: "A",
+			key:   "A",
 			value: "a",
 		},
 		"Trailing whitespace with no EOL": {
 			input: "A=a ",
-			key: "A",
+			key:   "A",
 			value: "a",
 		},
 	}
