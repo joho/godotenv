@@ -20,7 +20,6 @@ import (
 	"os"
 	"os/exec"
 	"sort"
-	"strconv"
 	"strings"
 )
 
@@ -159,13 +158,33 @@ func Write(envMap map[string]string, filename string) error {
 	return file.Sync()
 }
 
+// isInt checks if the string may be serialized as a number value, leading
+// "-" symbol is allowed for negative numbers, leading "+" sign is not. The
+// length of the value is not limited.
+func isInt(s string) bool {
+	s = strings.TrimPrefix(s, "-")
+
+	if len(s) == 0 {
+		return false
+	}
+
+	for _, r := range s {
+		if '0' <= r && r <= '9' {
+			continue
+		}
+		return false
+	}
+
+	return true
+}
+
 // Marshal outputs the given environment as a dotenv-formatted environment file.
 // Each line is in the format: KEY="VALUE" where VALUE is backslash-escaped.
 func Marshal(envMap map[string]string) (string, error) {
 	lines := make([]string, 0, len(envMap))
 	for k, v := range envMap {
-		if d, err := strconv.Atoi(v); err == nil {
-			lines = append(lines, fmt.Sprintf(`%s=%d`, k, d))
+		if isInt(v) {
+			lines = append(lines, fmt.Sprintf(`%s=%s`, k, v))
 		} else {
 			lines = append(lines, fmt.Sprintf(`%s="%s"`, k, doubleQuoteEscape(v)))
 		}
