@@ -134,7 +134,23 @@ func TestLoadDoesNotOverride(t *testing.T) {
 		"OPTION_A": "do_not_override",
 		"OPTION_B": "",
 	}
+
 	loadEnvAndCompareValues(t, Load, envFileName, expectedValues, presets)
+
+}
+
+func TestReadDoesNotOverride(t *testing.T) {
+	envFileName := "fixtures/plain.env"
+	overrideEnvName := "fixtures/read_overrides.env"
+
+	envMap, err := Read(envFileName, overrideEnvName)
+	if err != nil {
+		t.Error("Error reading file")
+	}
+
+	if envMap["OPTION_A"] != "1" {
+		t.Error("Read falsely overrode OPTION_A")
+	}
 }
 
 func TestOverloadDoesOverride(t *testing.T) {

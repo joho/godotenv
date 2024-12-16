@@ -98,7 +98,9 @@ func Read(filenames ...string) (envMap map[string]string, err error) {
 		}
 
 		for key, value := range individualEnvMap {
-			envMap[key] = value
+			if _, ok := envMap[key]; !ok {
+				envMap[key] = value
+			}
 		}
 	}
 
