@@ -132,12 +132,12 @@ if "" == env {
   env = "development"
 }
 
-godotenv.Load(".env." + env + ".local")
+godotenv.Load() // The Original .env
+godotenv.Load(".env." + env)
 if "test" != env {
   godotenv.Load(".env.local")
 }
-godotenv.Load(".env." + env)
-godotenv.Load() // The Original .env
+godotenv.Load(".env." + env + ".local")
 ```
 
 If you need to, you can also use `godotenv.Overload()` to defy this convention
