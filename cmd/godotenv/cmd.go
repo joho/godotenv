@@ -6,7 +6,7 @@ import (
 	"log"
 	"strings"
 
-	"github.com/harness/godotenv/v3"
+	"github.com/harness/godotenv/v4"
 )
 
 func main() {

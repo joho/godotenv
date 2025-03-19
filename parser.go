@@ -197,11 +197,25 @@ func expandEscapes(str string) string {
 			return "\n"
 		case "r":
 			return "\r"
+		case "t":
+			return "\t"
+		case "f":
+			return "\f"
+		case "b":
+			return "\b"
+		case "\"":
+			// Convert escaped quotes back to regular quotes
+			return "\""
+		case "u":
+			return match
+		case "$":
+			return match
 		default:
 			return match
 		}
 	})
-	return unescapeCharsRegex.ReplaceAllString(out, "$1")
+
+	return out
 }
 
 func indexOfNonSpaceChar(src []byte) int {
