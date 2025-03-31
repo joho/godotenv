@@ -184,6 +184,16 @@ func TestLoadEqualsEnv(t *testing.T) {
 	loadEnvAndCompareValues(t, Load, envFileName, expectedValues, noopPresets)
 }
 
+func TestLoadHyphenEnv(t *testing.T) {
+	envFileName := "fixtures/hyphen.env"
+	expectedValues := map[string]string{
+		"OPTION_A": "abc",
+		"OPTION-B": "def",
+	}
+
+	loadEnvAndCompareValues(t, Load, envFileName, expectedValues, noopPresets)
+}
+
 func TestLoadQuotedEnv(t *testing.T) {
 	envFileName := "fixtures/quoted.env"
 	expectedValues := map[string]string{
