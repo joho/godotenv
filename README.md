@@ -1,5 +1,8 @@
 # GoDotEnv ![CI](https://github.com/joho/godotenv/workflows/CI/badge.svg) [![Go Report Card](https://goreportcard.com/badge/github.com/joho/godotenv)](https://goreportcard.com/report/github.com/joho/godotenv)
 
+Exactly the same as the upstream godotenv, only allows passing in an in-memory filesystem via afero lib
+for easier unit tests.
+
 A Go (golang) port of the Ruby [dotenv](https://github.com/bkeepers/dotenv) project (which loads env vars from a .env file).
 
 From the original Library:
