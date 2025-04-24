@@ -3,6 +3,7 @@ package godotenv
 import (
 	"bytes"
 	"fmt"
+	"io/fs"
 	"os"
 	"reflect"
 	"strings"
@@ -45,6 +46,33 @@ func loadEnvAndCompareValues(t *testing.T, fs afero.Fs, loader func(fs afero.Fs,
 			t.Errorf("Mismatch for key '%v': expected '%#v' got '%#v'", k, v, envValue)
 		}
 	}
+}
+
+func copyFixtureFiles(vfs afero.Fs) error {
+	fixturesDirname := "fixtures"
+	err := afero.Walk(vfs, fixturesDirname, func(path string, info fs.FileInfo, err error) error {
+		var data []byte
+
+		if err != nil {
+			return err
+		}
+
+		data, err = os.ReadFile(path)
+		if err != nil {
+			return fmt.Errorf("Error reading file from real fs: %s: %w", path, err)
+		}
+
+		err = afero.WriteFile(vfs, path, data, 0o666)
+		if err != nil {
+			return fmt.Errorf("Error writing file to virtual fs: %s: %w", path, err)
+		}
+
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func TestLoadWithNoArgsLoadsDotEnv(t *testing.T) {
