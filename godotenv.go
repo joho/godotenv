@@ -211,6 +211,10 @@ func readFile(fs afero.Fs, filename string) (envMap map[string]string, err error
 		return
 	}
 	defer file.Close()
+	fInfo, err := file.Stat()
+	if fInfo.IsDir() {
+		return nil, fmt.Errorf("readFile called on directory")
+	}
 
 	return Parse(file)
 }
