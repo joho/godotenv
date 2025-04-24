@@ -22,6 +22,8 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+
+	"github.com/spf13/afero"
 )
 
 const doubleQuoteSpecialChars = "\\\n\r\"!$`"
@@ -48,11 +50,11 @@ func Parse(r io.Reader) (map[string]string, error) {
 //	godotenv.Load("fileone", "filetwo")
 //
 // It's important to note that it WILL NOT OVERRIDE an env variable that already exists - consider the .env file to set dev vars or sensible defaults.
-func Load(filenames ...string) (err error) {
+func Load(fs afero.Fs, filenames ...string) (err error) {
 	filenames = filenamesOrDefault(filenames)
 
 	for _, filename := range filenames {
-		err = loadFile(filename, false)
+		err = loadFile(fs, filename, false)
 		if err != nil {
 			return // return early on a spazout
 		}
@@ -71,11 +73,11 @@ func Load(filenames ...string) (err error) {
 //	godotenv.Overload("fileone", "filetwo")
 //
 // It's important to note this WILL OVERRIDE an env variable that already exists - consider the .env file to forcefully set all vars.
-func Overload(filenames ...string) (err error) {
+func Overload(fs afero.Fs, filenames ...string) (err error) {
 	filenames = filenamesOrDefault(filenames)
 
 	for _, filename := range filenames {
-		err = loadFile(filename, true)
+		err = loadFile(fs, filename, true)
 		if err != nil {
 			return // return early on a spazout
 		}
@@ -85,12 +87,12 @@ func Overload(filenames ...string) (err error) {
 
 // Read all env (with same file loading semantics as Load) but return values as
 // a map rather than automatically writing values into env
-func Read(filenames ...string) (envMap map[string]string, err error) {
+func Read(fs afero.Fs, filenames ...string) (envMap map[string]string, err error) {
 	filenames = filenamesOrDefault(filenames)
 	envMap = make(map[string]string)
 
 	for _, filename := range filenames {
-		individualEnvMap, individualErr := readFile(filename)
+		individualEnvMap, individualErr := readFile(fs, filename)
 
 		if individualErr != nil {
 			err = individualErr
@@ -125,12 +127,12 @@ func UnmarshalBytes(src []byte) (map[string]string, error) {
 //
 // If you want more fine grained control over your command it's recommended
 // that you use `Load()`, `Overload()` or `Read()` and the `os/exec` package yourself.
-func Exec(filenames []string, cmd string, cmdArgs []string, overload bool) error {
+func Exec(fs afero.Fs, filenames []string, cmd string, cmdArgs []string, overload bool) error {
 	op := Load
 	if overload {
 		op = Overload
 	}
-	if err := op(filenames...); err != nil {
+	if err := op(fs, filenames...); err != nil {
 		return err
 	}
 
@@ -142,12 +144,12 @@ func Exec(filenames []string, cmd string, cmdArgs []string, overload bool) error
 }
 
 // Write serializes the given environment and writes it to a file.
-func Write(envMap map[string]string, filename string) error {
+func Write(fs afero.Fs, envMap map[string]string, filename string) error {
 	content, err := Marshal(envMap)
 	if err != nil {
 		return err
 	}
-	file, err := os.Create(filename)
+	file, err := fs.Create(filename)
 	if err != nil {
 		return err
 	}
@@ -181,8 +183,8 @@ func filenamesOrDefault(filenames []string) []string {
 	return filenames
 }
 
-func loadFile(filename string, overload bool) error {
-	envMap, err := readFile(filename)
+func loadFile(fs afero.Fs, filename string, overload bool) error {
+	envMap, err := readFile(fs, filename)
 	if err != nil {
 		return err
 	}
@@ -203,8 +205,8 @@ func loadFile(filename string, overload bool) error {
 	return nil
 }
 
-func readFile(filename string) (envMap map[string]string, err error) {
-	file, err := os.Open(filename)
+func readFile(fs afero.Fs, filename string) (envMap map[string]string, err error) {
+	file, err := fs.Open(filename)
 	if err != nil {
 		return
 	}
