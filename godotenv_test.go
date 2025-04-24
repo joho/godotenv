@@ -25,7 +25,7 @@ func parseAndCompare(t *testing.T, rawEnvLine string, expectedKey string, expect
 	}
 }
 
-func loadEnvAndCompareValues(t *testing.T, fs afero.Fs, loader func(files ...string) error, envFileName string, expectedValues map[string]string, presets map[string]string) {
+func loadEnvAndCompareValues(t *testing.T, fs afero.Fs, loader func(fs afero.Fs, files ...string) error, envFileName string, expectedValues map[string]string, presets map[string]string) {
 	// first up, clear the env
 	os.Clearenv()
 
