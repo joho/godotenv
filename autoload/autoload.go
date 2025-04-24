@@ -8,8 +8,12 @@ package autoload
 	And bob's your mother's brother
 */
 
-import "github.com/joho/godotenv"
+import (
+	"github.com/joho/godotenv"
+	"github.com/spf13/afero"
+)
 
 func init() {
-	godotenv.Load()
+	fs := afero.NewOsFs()
+	godotenv.Load(fs)
 }
