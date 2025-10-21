@@ -212,7 +212,7 @@ func indexOfNonSpaceChar(src []byte) int {
 }
 
 // hasQuotePrefix reports whether charset starts with single or double quote and returns quote character
-func hasQuotePrefix(src []byte) (prefix byte, isQuored bool) {
+func hasQuotePrefix(src []byte) (prefix byte, isQuoted bool) {
 	if len(src) == 0 {
 		return 0, false
 	}
