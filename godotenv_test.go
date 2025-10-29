@@ -2,6 +2,7 @@ package godotenv
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"os"
 	"reflect"
@@ -639,6 +640,31 @@ func TestWhitespace(t *testing.T) {
 			}
 			if result[c.key] != c.value {
 				t.Errorf("Input %q Expected:\t %q/%q\nGot:\t %q", c.input, c.key, c.value, result)
+			}
+		})
+	}
+}
+
+func TestParserErrors(t *testing.T) {
+	cases := map[string]struct {
+		input string
+		err   error
+	}{
+		"Invalid char": {
+			input: "foo-1=bar",
+			err:   ErrUnexpectedChar,
+		},
+		"UnterminatedQuote": {
+			input: "foo=\"bar",
+			err:   ErrUnterminatedQuote,
+		},
+	}
+
+	for n, c := range cases {
+		t.Run(n, func(t *testing.T) {
+			v, err := Unmarshal(c.input)
+			if !errors.Is(err, c.err) {
+				t.Errorf("Input: %q Expected:\t %q\nGot:\t %q Val: %v", c.input, c.err, err, v)
 			}
 		})
 	}
