@@ -124,20 +124,31 @@ Existing envs take precedence of envs that are loaded later.
 
 The [convention](https://github.com/bkeepers/dotenv#what-other-env-files-can-i-use)
 for managing multiple environments (i.e. development, test, production)
-is to create an env named `{YOURAPP}_ENV` and load envs in this order:
+is to create an env named `APP_ENV` and load envs in this order:
 
 ```go
-env := os.Getenv("FOO_ENV")
-if "" == env {
-  env = "development"
+env := os.Getenv("APP_ENV")
+if env == "" {
+	env = "development"
 }
 
-godotenv.Load(".env." + env + ".local")
-if "test" != env {
-  godotenv.Load(".env.local")
-}
-godotenv.Load(".env." + env)
-godotenv.Load() // The Original .env
+base   := ".env"           // .env
+local  := base + ".local"  // .env.local
+mode   := base + "." + env // .env.[mode]
+localM := mode + ".local"  // .env.[mode].local
+
+godotenv.Load(localM)
+godotenv.Load(mode)
+godotenv.Load(local)
+godotenv.Load(base)
+```
+
+Sometimes you might have env variables that should not be committed into the codebase, especially if your project is hosted in a public repository. In this case you must add the following snippet in your `.gitignore` file:
+
+```gitignore
+# local env files
+.env.local
+.env.*.local
 ```
 
 If you need to, you can also use `godotenv.Overload()` to defy this convention
