@@ -1,4 +1,4 @@
-# GoDotEnv ![CI](https://github.com/joho/godotenv/workflows/CI/badge.svg) [![Go Report Card](https://goreportcard.com/badge/github.com/joho/godotenv)](https://goreportcard.com/report/github.com/joho/godotenv)
+# GoDotEnv ![CI](https://github.com/golibs4amar/godotenv/workflows/CI/badge.svg) [![Go Report Card](https://goreportcard.com/badge/github.com/golibs4amar/godotenv)](https://goreportcard.com/report/github.com/golibs4amar/godotenv)
 
 A Go (golang) port of the Ruby [dotenv](https://github.com/bkeepers/dotenv) project (which loads env vars from a .env file).
 
@@ -17,19 +17,19 @@ There is test coverage and CI for both linuxish and Windows environments, but I 
 As a library
 
 ```shell
-go get github.com/joho/godotenv
+go get github.com/golibs4amar/godotenv
 ```
 
 or if you want to use it as a bin command
 
 go >= 1.17
 ```shell
-go install github.com/joho/godotenv/cmd/godotenv@latest
+go install github.com/golibs4amar/godotenv/cmd/godotenv@latest
 ```
 
 go < 1.17
 ```shell
-go get github.com/joho/godotenv/cmd/godotenv
+go get github.com/golibs4amar/godotenv/cmd/godotenv
 ```
 
 ## Usage
@@ -50,7 +50,7 @@ import (
     "log"
     "os"
 
-    "github.com/joho/godotenv"
+    "github.com/golibs4amar/godotenv"
 )
 
 func main() {
@@ -69,7 +69,7 @@ func main() {
 If you're even lazier than that, you can just take advantage of the autoload package which will read in `.env` on import
 
 ```go
-import _ "github.com/joho/godotenv/autoload"
+import _ "github.com/golibs4amar/godotenv/autoload"
 ```
 
 While `.env` in the project root is the default, you don't have to be constrained, both examples below are 100% legit
@@ -175,7 +175,7 @@ content, err := godotenv.Marshal(env)
 
 Contributions are welcome, but with some caveats.
 
-This library has been declared feature complete (see [#182](https://github.com/joho/godotenv/issues/182) for background) and will not be accepting issues or pull requests adding new functionality or breaking the library API.
+This library has been declared feature complete (see [#182](https://github.com/golibs4amar/godotenv/issues/182) for background) and will not be accepting issues or pull requests adding new functionality or breaking the library API.
 
 Contributions would be gladly accepted that:
 
@@ -195,7 +195,7 @@ Contributions would be gladly accepted that:
 
 Releases should follow [Semver](http://semver.org/) though the first couple of releases are `v1` and `v1.1`.
 
-Use [annotated tags for all releases](https://github.com/joho/godotenv/issues/30). Example `git tag -a v1.2.1`
+Use [annotated tags for all releases](https://github.com/golibs4amar/godotenv/issues/30). Example `git tag -a v1.2.1`
 
 ## Who?
 
