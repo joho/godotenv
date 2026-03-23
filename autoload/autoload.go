@@ -25,7 +25,6 @@ func init() {
 
 		if err := godotenv.Load(filenames[index]); err != nil {
 			log.Println(err)
-			return
 		}
 
 		return
