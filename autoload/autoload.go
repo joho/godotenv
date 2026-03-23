@@ -10,6 +10,24 @@ package autoload
 
 import "github.com/joho/godotenv"
 
+var filenames = []string{".env", ".env.production", ".env.development", ".env.test", ".env.local"}
+
 func init() {
-	godotenv.Load()
+	for index := range filenames {
+		if _, err := os.Stat(filenames[index]); err != nil {
+			if errors.Is(err, os.ErrNotExist) {
+				continue
+			}
+
+			log.Println(err)
+			return
+		}
+
+		if err := godotenv.Load(filenames[index]); err != nil {
+			log.Println(err)
+			return
+		}
+
+		return
+	}
 }
