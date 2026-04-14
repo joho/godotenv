@@ -49,23 +49,25 @@ func parseBytes(src []byte, out map[string]string) error {
 //
 // It skips any comment line or non-whitespace character.
 func getStatementStart(src []byte) []byte {
-	pos := indexOfNonSpaceChar(src)
-	if pos == -1 {
-		return nil
-	}
+	for {
+		pos := indexOfNonSpaceChar(src)
+		if pos == -1 {
+			return nil
+		}
 
-	src = src[pos:]
-	if src[0] != charComment {
-		return src
-	}
+		src = src[pos:]
+		if src[0] != charComment {
+			return src
+		}
 
-	// skip comment section
-	pos = bytes.IndexFunc(src, isCharFunc('\n'))
-	if pos == -1 {
-		return nil
-	}
+		// skip comment section
+		pos = bytes.IndexFunc(src, isCharFunc('\n'))
+		if pos == -1 {
+			return nil
+		}
 
-	return getStatementStart(src[pos:])
+		src = src[pos:]
+	}
 }
 
 // locateKeyName locates and parses key name and returns rest of slice
