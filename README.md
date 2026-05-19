@@ -27,11 +27,6 @@ go >= 1.17
 go install github.com/joho/godotenv/cmd/godotenv@latest
 ```
 
-go < 1.17
-```shell
-go get github.com/joho/godotenv/cmd/godotenv
-```
-
 ## Usage
 
 Add your application configuration to your `.env` file in the root of your project:
