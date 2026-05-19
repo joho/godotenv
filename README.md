@@ -99,7 +99,7 @@ as a final aside, if you don't want godotenv munging your env you can just get a
 
 ```go
 var myEnv map[string]string
-myEnv, err := godotenv.Read()
+myEnv, err = godotenv.Read()
 
 s3Bucket := myEnv["S3_BUCKET"]
 ```
