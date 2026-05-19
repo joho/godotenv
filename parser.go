@@ -166,8 +166,12 @@ func extractVarValue(src []byte, vars map[string]string) (value string, rest []b
 			continue
 		}
 
-		// skip escaped quote symbol (\" or \', depends on quote)
-		if prevChar := src[i-1]; prevChar == '\\' {
+		// skip escaped quote symbol; a quote is escaped only when preceded by an odd number of backslashes
+		backslashes := 0
+		for j := i - 1; j >= 0 && src[j] == '\\'; j-- {
+			backslashes++
+		}
+		if backslashes%2 == 1 {
 			continue
 		}
 
