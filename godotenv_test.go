@@ -441,6 +441,10 @@ func TestLinesToIgnore(t *testing.T) {
 		"Indented comment": {
 			input: "\t # comment",
 		},
+		"Multiple consecutive comments": {
+			input: "# one\n# two\n# three\nFOO=bar",
+			want:  "FOO=bar",
+		},
 		"non-ignored value": {
 			input: `export OPTION_B='\n'`,
 			want:  `export OPTION_B='\n'`,
