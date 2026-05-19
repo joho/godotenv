@@ -184,6 +184,31 @@ func TestLoadEqualsEnv(t *testing.T) {
 	loadEnvAndCompareValues(t, Load, envFileName, expectedValues, noopPresets)
 }
 
+func TestLoadHyphenEnv(t *testing.T) {
+	envFileName := "fixtures/hyphen.env"
+	expectedValues := map[string]string{
+		"OPTION_A": "abc",
+		"OPTION-B": "def",
+	}
+
+	loadEnvAndCompareValues(t, Load, envFileName, expectedValues, noopPresets)
+}
+
+func TestKeyNameCharsetRejectsDisallowed(t *testing.T) {
+	// Locks in the variable-name charset to [A-Za-z0-9_.-]. If you widen
+	// this further, delete the relevant case here on purpose.
+	disallowed := []string{
+		"FOO+BAR=baz",
+		"FOO@BAR=baz",
+		"FOO/BAR=baz",
+	}
+	for _, input := range disallowed {
+		if _, err := Unmarshal(input); err == nil {
+			t.Errorf("expected error parsing %q, got nil", input)
+		}
+	}
+}
+
 func TestLoadQuotedEnv(t *testing.T) {
 	envFileName := "fixtures/quoted.env"
 	expectedValues := map[string]string{
