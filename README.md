@@ -22,7 +22,6 @@ go get github.com/joho/godotenv
 
 or if you want to use it as a bin command
 
-go >= 1.17
 ```shell
 go install github.com/joho/godotenv/cmd/godotenv@latest
 ```
