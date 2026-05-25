@@ -368,6 +368,9 @@ func TestParsing(t *testing.T) {
 	// parses escaped double quotes
 	parseAndCompare(t, `FOO="escaped\"bar"`, "FOO", `escaped"bar`)
 
+	// write/read roundtrip preserves escaped quote-only values
+	parseAndCompare(t, `FOO="\"\""`, "FOO", `""`)
+
 	// a trailing escaped backslash does not escape the closing quote
 	parseAndCompare(t, `FOO="bar\\"`, "FOO", `bar\`)
 
