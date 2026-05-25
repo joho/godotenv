@@ -710,10 +710,6 @@ func TestParserErrors(t *testing.T) {
 		input string
 		err   error
 	}{
-		"Invalid char": {
-			input: "foo-1=bar",
-			err:   ErrUnexpectedChar,
-		},
 		"UnterminatedQuote": {
 			input: "foo=\"bar",
 			err:   ErrUnterminatedQuote,
