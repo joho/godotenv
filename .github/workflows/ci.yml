@@ -9,7 +9,7 @@ jobs:
       fail-fast: false
       matrix:
         go: [ '1.26', '1.25', '1.24', '1.23', '1.22' ]
-        os: [ ubuntu-latest, macOS-latest, windows-latest ]
+        os: [ ubuntu-latest, macOS-latest, windows-2025-vs2026 ]
     name: ${{ matrix.os }} Go ${{ matrix.go }} Tests
     steps:
       - uses: actions/checkout@v6
