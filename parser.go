@@ -104,8 +104,8 @@ loop:
 			break loop
 		case '_':
 		default:
-			// variable name should match [A-Za-z0-9_.-]
-			if unicode.IsLetter(rchar) || unicode.IsNumber(rchar) || rchar == '.' || rchar == '-' {
+			// variable name should match [A-Za-z0-9_.()-]
+			if unicode.IsLetter(rchar) || unicode.IsNumber(rchar) || rchar == '.' || rchar == '-' || rchar == '(' || rchar == ')' {
 				continue
 			}
 

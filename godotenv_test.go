@@ -705,6 +705,27 @@ func TestWhitespace(t *testing.T) {
 	}
 }
 
+func TestUnmarshalWindowsEnvVarWithParenthesesInKey(t *testing.T) {
+	testEnv := `
+DP_WORK_DIR=C:\\User
+TEST=${DP_WORK_DIR}\\test
+CommonProgramFiles(x86)=C:\Program Files (x86)\Common Files
+`
+	result, err := Unmarshal(testEnv)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	expected := map[string]string{
+		"DP_WORK_DIR":                `C:\\User`,
+		"TEST":                       `C:\\User\\test`,
+		"CommonProgramFiles(x86)":    `C:\Program Files (x86)\Common Files`,
+	}
+	if !reflect.DeepEqual(result, expected) {
+		t.Fatalf("expected %#v, got %#v", expected, result)
+	}
+}
+
 func TestParserErrors(t *testing.T) {
 	cases := map[string]struct {
 		input string
