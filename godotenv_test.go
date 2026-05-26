@@ -416,6 +416,8 @@ func TestParsing(t *testing.T) {
 	// it 'ignores inline comments' do
 	// expect(env("foo=bar # this is foo")).to eql('foo' => 'bar')
 	parseAndCompare(t, "FOO=bar # this is foo", "FOO", "bar")
+	parseAndCompare(t, "FOO=#hash", "FOO", "#hash")
+	parseAndCompare(t, "FOO=# trailing", "FOO", "# trailing")
 
 	// it 'allows # in quoted value' do
 	// expect(env('foo="bar#baz" # comment')).to eql('foo' => 'bar#baz')
