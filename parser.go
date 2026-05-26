@@ -263,12 +263,57 @@ func isLineEnd(r rune) bool {
 }
 
 var (
-	escapeRegex        = regexp.MustCompile(`\\.`)
-	expandVarRegex     = regexp.MustCompile(`(\\)?(\$)(\()?\{?([A-Z0-9_]+)?\}?`)
-	unescapeCharsRegex = regexp.MustCompile(`\\([^$])`)
+	escapeRegex                  = regexp.MustCompile(`\\.`)
+	expandVarDefaultColonRegex   = regexp.MustCompile(`(\\)?\$\{([A-Z0-9_]+):-([^}]*)\}`)
+	expandVarUnsetDefaultRegex   = regexp.MustCompile(`(\\)?\$\{([A-Z0-9_]+)-([^}]+)\}`)
+	expandVarRegex               = regexp.MustCompile(`(\\)?(\$)(\()?\{?([A-Z0-9_]+)?\}?`)
+	unescapeCharsRegex           = regexp.MustCompile(`\\([^$])`)
 )
 
+func lookupExpansionVar(name string, m map[string]string) (string, bool) {
+	if val, ok := m[name]; ok {
+		return val, true
+	}
+	return os.LookupEnv(name)
+}
+
 func expandVariables(v string, m map[string]string) string {
+	v = expandVarDefaultColonRegex.ReplaceAllStringFunc(v, func(s string) string {
+		submatch := expandVarDefaultColonRegex.FindStringSubmatch(s)
+		if submatch == nil {
+			return s
+		}
+		if submatch[1] == "\\" {
+			return submatch[0][1:]
+		}
+
+		name, defaultVal := submatch[2], submatch[3]
+		val, ok := lookupExpansionVar(name, m)
+		if ok && val != "" {
+			return val
+		}
+
+		return defaultVal
+	})
+
+	v = expandVarUnsetDefaultRegex.ReplaceAllStringFunc(v, func(s string) string {
+		submatch := expandVarUnsetDefaultRegex.FindStringSubmatch(s)
+		if submatch == nil {
+			return s
+		}
+		if submatch[1] == "\\" {
+			return submatch[0][1:]
+		}
+
+		name, defaultVal := submatch[2], submatch[3]
+		val, ok := lookupExpansionVar(name, m)
+		if ok {
+			return val
+		}
+
+		return defaultVal
+	})
+
 	return expandVarRegex.ReplaceAllStringFunc(v, func(s string) string {
 		submatch := expandVarRegex.FindStringSubmatch(s)
 
@@ -278,13 +323,10 @@ func expandVariables(v string, m map[string]string) string {
 		if submatch[1] == "\\" || submatch[2] == "(" {
 			return submatch[0][1:]
 		} else if submatch[4] != "" {
-			if val, ok := m[submatch[4]]; ok {
+			if val, ok := lookupExpansionVar(submatch[4], m); ok {
 				return val
 			}
-			if val, ok := os.LookupEnv(submatch[4]); ok {
-				return val
-			}
-			return m[submatch[4]]
+			return ""
 		}
 		return s
 	})

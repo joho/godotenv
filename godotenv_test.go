@@ -296,6 +296,26 @@ func TestExpanding(t *testing.T) {
 			"FOO=test\nBAR=\"foo\\${FOO} ${FOO}\"",
 			map[string]string{"FOO": "test", "BAR": "foo${FOO} test"},
 		},
+		{
+			"uses default value when variable is unset or empty",
+			`VAR="${VAR:-default}"`,
+			map[string]string{"VAR": "default"},
+		},
+		{
+			"keeps existing value with default syntax when variable is set",
+			"VAR=custom\nOTHER=\"${VAR:-default}\"",
+			map[string]string{"VAR": "custom", "OTHER": "custom"},
+		},
+		{
+			"uses default value when variable is unset",
+			`OTHER="${VAR-default}"`,
+			map[string]string{"OTHER": "default"},
+		},
+		{
+			"keeps empty value with unset-only default syntax",
+			"VAR=\nOTHER=\"${VAR-default}\"",
+			map[string]string{"VAR": "", "OTHER": ""},
+		},
 	}
 
 	for _, tt := range tests {
