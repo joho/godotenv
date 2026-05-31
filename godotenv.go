@@ -151,7 +151,10 @@ func Write(envMap map[string]string, filename string) error {
 		return err
 	}
 	defer file.Close()
-	_, err = file.WriteString(content + "\n")
+	if content != "" {
+		content += "\n"
+	}
+	_, err = file.WriteString(content)
 	if err != nil {
 		return err
 	}

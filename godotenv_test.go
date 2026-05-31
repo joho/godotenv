@@ -575,6 +575,25 @@ func TestWrite(t *testing.T) {
 
 }
 
+func TestWriteEmptyMapProducesEmptyFile(t *testing.T) {
+	target := "fixtures/write_empty_map_test.env"
+	defer os.Remove(target)
+
+	err := Write(map[string]string{}, target)
+	if err != nil {
+		t.Fatalf("Write returned error: %v", err)
+	}
+
+	raw, err := os.ReadFile(target)
+	if err != nil {
+		t.Fatalf("ReadFile returned error: %v", err)
+	}
+
+	if len(raw) != 0 {
+		t.Fatalf("expected empty file, got %q", string(raw))
+	}
+}
+
 func TestRoundtrip(t *testing.T) {
 	fixtures := []string{"equals.env", "exported.env", "plain.env", "quoted.env"}
 	for _, fixture := range fixtures {
