@@ -12,7 +12,7 @@ jobs:
         os: [ ubuntu-latest, macOS-latest, windows-2025-vs2026 ]
     name: ${{ matrix.os }} Go ${{ matrix.go }} Tests
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: Setup go
         uses: actions/setup-go@v6
         with:
