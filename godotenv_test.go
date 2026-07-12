@@ -448,6 +448,14 @@ func TestParsing(t *testing.T) {
 	if err == nil {
 		t.Errorf("Expected \"%v\" to return error, but it didn't", badlyFormattedLine)
 	}
+
+	// a statement without a separator should error instead of
+	// silently registering an empty key
+	noSeparatorLine := "KEY_WITHOUT_SEPARATOR"
+	_, err = Unmarshal(noSeparatorLine)
+	if !errors.Is(err, ErrMissingSeparator) {
+		t.Errorf("Expected \"%v\" to return ErrMissingSeparator, got %v", noSeparatorLine, err)
+	}
 }
 
 func TestLinesToIgnore(t *testing.T) {
