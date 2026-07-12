@@ -296,6 +296,11 @@ func TestExpanding(t *testing.T) {
 			"FOO=test\nBAR=\"foo\\${FOO} ${FOO}\"",
 			map[string]string{"FOO": "test", "BAR": "foo${FOO} test"},
 		},
+		{
+			"does not expand command substitution",
+			"FOO=test\nBAR=$(FOO)",
+			map[string]string{"FOO": "test", "BAR": "$(FOO)"},
+		},
 	}
 
 	for _, tt := range tests {

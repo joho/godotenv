@@ -275,8 +275,11 @@ func expandVariables(v string, m map[string]string) string {
 		if submatch == nil {
 			return s
 		}
-		if submatch[1] == "\\" || submatch[2] == "(" {
+		if submatch[1] == "\\" {
 			return submatch[0][1:]
+		} else if submatch[3] == "(" {
+			// leave command substitution $(...) untouched
+			return submatch[0]
 		} else if submatch[4] != "" {
 			if val, ok := m[submatch[4]]; ok {
 				return val
