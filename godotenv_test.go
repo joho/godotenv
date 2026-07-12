@@ -371,6 +371,9 @@ func TestParsing(t *testing.T) {
 	// a trailing escaped backslash does not escape the closing quote
 	parseAndCompare(t, `FOO="bar\\"`, "FOO", `bar\`)
 
+	// an escaped quote just before the closing quote is preserved
+	parseAndCompare(t, `FOO="say \"hi\""`, "FOO", `say "hi"`)
+
 	// parses single quotes inside double quotes
 	parseAndCompare(t, `FOO="'d'"`, "FOO", `'d'`)
 
