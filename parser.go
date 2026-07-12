@@ -22,6 +22,7 @@ var (
 	ErrZeroLengthString  = errors.New("zero length string")
 	ErrUnexpectedChar    = errors.New("unexpected character")
 	ErrUnterminatedQuote = errors.New("unterminated quoted value")
+	ErrMissingSeparator  = errors.New("missing '=' or ':' separator")
 )
 
 func parseBytes(src []byte, out map[string]string) error {
@@ -118,6 +119,10 @@ loop:
 
 	if len(src) == 0 {
 		return "", nil, ErrZeroLengthString
+	}
+
+	if offset == 0 {
+		return "", nil, fmt.Errorf("%w near %q", ErrMissingSeparator, string(src))
 	}
 
 	// trim whitespace
