@@ -417,6 +417,11 @@ func TestParsing(t *testing.T) {
 	// expect(env("foo=bar # this is foo")).to eql('foo' => 'bar')
 	parseAndCompare(t, "FOO=bar # this is foo", "FOO", "bar")
 
+	// a value that starts with a comment marker is an empty value
+	parseAndCompare(t, "FOO=#bar", "FOO", "")
+	parseAndCompare(t, "FOO= #bar", "FOO", "")
+	parseAndCompare(t, "FOO=#", "FOO", "")
+
 	// it 'allows # in quoted value' do
 	// expect(env('foo="bar#baz" # comment')).to eql('foo' => 'bar#baz')
 	parseAndCompare(t, `FOO="bar#baz" # comment`, "FOO", "bar#baz")
