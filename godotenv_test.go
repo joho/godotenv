@@ -296,6 +296,26 @@ func TestExpanding(t *testing.T) {
 			"FOO=test\nBAR=\"foo\\${FOO} ${FOO}\"",
 			map[string]string{"FOO": "test", "BAR": "foo${FOO} test"},
 		},
+		{
+			"expands braced default when unset",
+			`VAR="${MISSING:-default}"`,
+			map[string]string{"VAR": "default"},
+		},
+		{
+			"expands braced default when empty",
+			"EMPTY=\nVAR=\"${EMPTY:-fallback}\"",
+			map[string]string{"EMPTY": "", "VAR": "fallback"},
+		},
+		{
+			"keeps value when set for braced default",
+			"FOO=set\nVAR=\"${FOO:-default}\"",
+			map[string]string{"FOO": "set", "VAR": "set"},
+		},
+		{
+			"leaves command substitution untouched",
+			`VAR="$(echo hi)"`,
+			map[string]string{"VAR": "$(echo hi)"},
+		},
 	}
 
 	for _, tt := range tests {

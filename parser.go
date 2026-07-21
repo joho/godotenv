@@ -264,28 +264,55 @@ func isLineEnd(r rune) bool {
 
 var (
 	escapeRegex        = regexp.MustCompile(`\\.`)
-	expandVarRegex     = regexp.MustCompile(`(\\)?(\$)(\()?\{?([A-Z0-9_]+)?\}?`)
+	// Supports $VAR, ${VAR}, and bash-style ${VAR:-default}.
+	// Group 1: optional escape. Group 2: rest after $.
+	// Group 3: command-substitution body for $(...).
+	// Group 4/5/6: braced name and optional :-default.
+	// Group 7: bare name.
+	expandVarRegex     = regexp.MustCompile(`(\\)?\$(\(([^)]*)\)|\{([A-Z0-9_]+)(:-([^}]*))?\}|([A-Z0-9_]+))`)
 	unescapeCharsRegex = regexp.MustCompile(`\\([^$])`)
 )
 
 func expandVariables(v string, m map[string]string) string {
 	return expandVarRegex.ReplaceAllStringFunc(v, func(s string) string {
 		submatch := expandVarRegex.FindStringSubmatch(s)
-
 		if submatch == nil {
 			return s
 		}
-		if submatch[1] == "\\" || submatch[2] == "(" {
-			return submatch[0][1:]
-		} else if submatch[4] != "" {
-			if val, ok := m[submatch[4]]; ok {
-				return val
-			}
-			if val, ok := os.LookupEnv(submatch[4]); ok {
-				return val
-			}
-			return m[submatch[4]]
+		// Escaped: \$VAR / \${VAR}
+		if submatch[1] == "\\" {
+			return s[1:]
 		}
-		return s
+		// $(...) is left untouched (see open discussion around command substitution).
+		if strings.HasPrefix(submatch[2], "(") {
+			return s
+		}
+
+		name := submatch[4]
+		if name == "" {
+			name = submatch[7]
+		}
+		if name == "" {
+			return s
+		}
+
+		val, ok := m[name]
+		if !ok {
+			val, ok = os.LookupEnv(name)
+		}
+
+		// ${NAME:-default} → default when unset or empty (bash semantics).
+		if submatch[5] != "" {
+			if !ok || val == "" {
+				return submatch[6]
+			}
+			return val
+		}
+
+		if ok {
+			return val
+		}
+		return ""
 	})
 }
+
