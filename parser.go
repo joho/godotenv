@@ -51,9 +51,9 @@ func parseBytes(src []byte, out map[string]string) error {
 	return nil
 }
 
-// getStatementPosition returns position of statement begin.
+// getStatementStart returns the start of the next statement in src.
 //
-// It skips any comment line or non-whitespace character.
+// It skips leading whitespace and comment lines.
 func getStatementStart(src []byte) []byte {
 	for {
 		pos := indexOfNonSpaceChar(src)
@@ -142,7 +142,7 @@ func extractVarValue(src []byte, vars map[string]string) (value string, rest []b
 			}
 		}
 
-		// Convert line to rune away to do accurate countback of runes
+		// Convert line to runes for accurate countback of runes
 		line := []rune(string(src[0:endOfLine]))
 
 		// Assume end of line is end of var
@@ -224,7 +224,7 @@ func indexOfNonSpaceChar(src []byte) int {
 	})
 }
 
-// hasQuotePrefix reports whether charset starts with single or double quote and returns quote character
+// hasQuotePrefix reports whether src starts with a single or double quote and returns the quote character.
 func hasQuotePrefix(src []byte) (prefix byte, isQuoted bool) {
 	if len(src) == 0 {
 		return 0, false
