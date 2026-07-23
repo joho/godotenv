@@ -26,6 +26,8 @@ var (
 
 func parseBytes(src []byte, out map[string]string) error {
 	src = bytes.ReplaceAll(src, []byte("\r\n"), []byte("\n"))
+	// Strip a leading UTF-8 BOM so Windows-edited .env files parse cleanly.
+	src = bytes.TrimPrefix(src, []byte{0xEF, 0xBB, 0xBF})
 	cutset := src
 	for {
 		cutset = getStatementStart(cutset)
