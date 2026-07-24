@@ -119,6 +119,16 @@ content := getRemoteFileContent()
 myEnv, err := godotenv.Unmarshal(content)
 ```
 
+... or from an `fs.FS` such as `embed.FS` (Go 1.16+)
+
+```go
+//go:embed .env
+var envFS embed.FS
+
+err := godotenv.LoadFS(envFS, ".env")
+// also: OverloadFS, ReadFS
+```
+
 ### Variable name compatibility
 
 Ruby's dotenv only allows `[A-Za-z0-9_.]` in key names, while Node's dotenv also permits `-`. godotenv has matched the Node charset since v1.4.0, so keys like `MY-VAR` parse cleanly here and in Node but will error under Ruby's dotenv.

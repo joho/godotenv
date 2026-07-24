@@ -206,10 +206,16 @@ func loadFile(filename string, overload bool) error {
 		return err
 	}
 
+	return setEnvMap(envMap, overload)
+}
+
+// setEnvMap applies envMap to the process environment. Existing keys are left
+// alone unless overload is true.
+func setEnvMap(envMap map[string]string, overload bool) error {
 	currentEnv := map[string]bool{}
 	rawEnv := os.Environ()
 	for _, rawEnvLine := range rawEnv {
-		key := strings.Split(rawEnvLine, "=")[0]
+		key := strings.SplitN(rawEnvLine, "=", 2)[0]
 		currentEnv[key] = true
 	}
 
