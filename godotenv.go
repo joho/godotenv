@@ -23,7 +23,6 @@ import (
 	"strings"
 )
 
-const doubleQuoteSpecialChars = "\\\n\r\"!$`"
 
 // Parse reads an env file from io.Reader, returning a map of keys and values.
 func Parse(r io.Reader) (map[string]string, error) {
@@ -233,15 +232,25 @@ func readFile(filename string) (envMap map[string]string, err error) {
 }
 
 func doubleQuoteEscape(line string) string {
-	for _, c := range doubleQuoteSpecialChars {
-		toReplace := "\\" + string(c)
-		if c == '\n' {
-			toReplace = `\n`
+	var b strings.Builder
+	b.Grow(len(line))
+	for _, c := range line {
+		switch c {
+		case '\\':
+			b.WriteString("\\\\")
+		case '\n':
+			b.WriteString(`\n`)
+		case '\r':
+			b.WriteString(`\r`)
+		case '"':
+			b.WriteString(`\"`)
+		case '!':
+			b.WriteString(`\!`)
+		case '$':
+			b.WriteString(`\$`)
+		default:
+			b.WriteRune(c)
 		}
-		if c == '\r' {
-			toReplace = `\r`
-		}
-		line = strings.ReplaceAll(line, string(c), toReplace)
 	}
-	return line
+	return b.String()
 }
