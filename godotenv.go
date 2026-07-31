@@ -15,12 +15,15 @@ package godotenv
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"io"
 	"os"
 	"os/exec"
 	"sort"
 	"strings"
+	"unicode"
+	"unicode/utf8"
 )
 
 const doubleQuoteSpecialChars = "\\\n\r\"!$`"
@@ -178,11 +181,42 @@ func isInt(s string) bool {
 	return true
 }
 
+// ErrInvalidKey is returned by Marshal when a key cannot be read back
+// from the dotenv text it produces.
+var ErrInvalidKey = errors.New("invalid key")
+
+// validKey mirrors the key grammar in locateKeyName: a key that Parse would
+// trim, truncate or reject cannot round-trip, so Marshal refuses to emit it.
+func validKey(k string) bool {
+	if r, _ := utf8.DecodeRuneInString(k); isSpace(r) {
+		return false
+	}
+	if strings.HasPrefix(k, exportPrefix) {
+		if r, _ := utf8.DecodeRuneInString(k[len(exportPrefix):]); isSpace(r) {
+			return false
+		}
+	}
+	if r, _ := utf8.DecodeLastRuneInString(k); unicode.IsSpace(r) {
+		return false
+	}
+	for i := 0; i < len(k); i++ {
+		if r := rune(k[i]); isSpace(r) || r == '_' || r == '.' || r == '-' ||
+			unicode.IsLetter(r) || unicode.IsNumber(r) {
+			continue
+		}
+		return false
+	}
+	return true
+}
+
 // Marshal outputs the given environment as a dotenv-formatted environment file.
 // Each line is in the format: KEY="VALUE" where VALUE is backslash-escaped.
 func Marshal(envMap map[string]string) (string, error) {
 	lines := make([]string, 0, len(envMap))
 	for k, v := range envMap {
+		if !validKey(k) {
+			return "", fmt.Errorf("%w %q", ErrInvalidKey, k)
+		}
 		if isInt(v) {
 			lines = append(lines, fmt.Sprintf(`%s=%s`, k, v))
 		} else {

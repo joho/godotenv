@@ -598,6 +598,61 @@ func TestRoundtrip(t *testing.T) {
 	}
 }
 
+func TestMarshalRejectsInvalidKeys(t *testing.T) {
+	// Keys the parser drops, renames or rejects must not be emitted verbatim.
+	invalid := []string{
+		// dropped as comment lines
+		"#k", "#a",
+		// truncated at the separator
+		"k=v", "k:v", "a=b", "a:b", "a=b=c",
+		// renamed by leading/trailing whitespace trim
+		" A", "A ", " A ", "k\t", "\tk", " \tA", "A\t ", "\u00a0a", "a\u00a0",
+		// renamed by the "export " prefix strip
+		"export A", "export\tA", "export  A",
+		// rejected by the parser
+		"!k", "+k", "a#b", "a!b", "$a", "@a", "%a", "a;b", "a,b", "a[b]", "a{b}",
+		`"a"`, "'a'", `a"b`, "a'b", `a\b`, "a/b", "a?b",
+		"é", "aé", "éa", "ß", "ñ", "中文", "a中", "a\nb",
+	}
+	for _, k := range invalid {
+		_, err := Marshal(map[string]string{k: "v"})
+		if err == nil {
+			t.Errorf("expected error marshaling key %q, got nil", k)
+		} else if !errors.Is(err, ErrInvalidKey) {
+			t.Errorf("marshaling key %q: expected ErrInvalidKey, got %v", k, err)
+		}
+	}
+}
+
+func TestMarshalKeyRoundTrip(t *testing.T) {
+	// Keys the parser reads back verbatim must round-trip byte-identically.
+	valid := []string{
+		"a", "A-B", "a.b", "_x", "0k", "-k", "export", "exportA",
+		"FOO", "A_B_C", "a1b2", "-a", "a-", ".a", "a.", "a.b.c", "a_b-c.0",
+		// whitespace inside the key is preserved on read
+		"a b", "A B", "a\tb", "a  b", "a b c",
+		// "export" is only stripped when followed by whitespace
+		"export_", "export.", "export-", "export0",
+		"",  // the parser reads `="v"` back as the empty key
+		"ü", // passes the byte-wise key check (0xBC is a unicode digit)
+	}
+	for _, k := range valid {
+		enc, err := Marshal(map[string]string{k: "v"})
+		if err != nil {
+			t.Errorf("marshaling key %q: unexpected error %v", k, err)
+			continue
+		}
+		dec, err := Unmarshal(enc)
+		if err != nil {
+			t.Errorf("key %q: unmarshal of %q errored: %v", k, enc, err)
+			continue
+		}
+		if !reflect.DeepEqual(dec, map[string]string{k: "v"}) {
+			t.Errorf("key %q: round trip via %q got %v", k, enc, dec)
+		}
+	}
+}
+
 func TestTrailingNewlines(t *testing.T) {
 	cases := map[string]struct {
 		input string
