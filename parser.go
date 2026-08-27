@@ -182,6 +182,19 @@ func extractVarValue(src []byte, vars map[string]string) (value string, rest []b
 			continue
 		}
 
+		// Treat a quote as the terminator only when the rest of this logical
+		// line is whitespace, an optional comment, or empty. Earlier quotes
+		// remain content, matching Node dotenv for values like FOO=\"test\"test\".
+		tail := src[i+1:]
+		lineEnd := bytes.IndexFunc(tail, isLineEnd)
+		if lineEnd == -1 {
+			lineEnd = len(tail)
+		}
+		trailing := bytes.TrimLeftFunc(tail[:lineEnd], isSpace)
+		if len(trailing) > 0 && trailing[0] != charComment {
+			continue
+		}
+
 		// trim quotes
 		trimFunc := isCharFunc(rune(quote))
 		value = string(bytes.TrimLeftFunc(bytes.TrimRightFunc(src[0:i], trimFunc), trimFunc))
@@ -265,7 +278,7 @@ func isLineEnd(r rune) bool {
 var (
 	escapeRegex        = regexp.MustCompile(`\\.`)
 	expandVarRegex     = regexp.MustCompile(`(\\)?(\$)(\()?\{?([A-Z0-9_]+)?\}?`)
-	unescapeCharsRegex = regexp.MustCompile(`\\([^$])`)
+	unescapeCharsRegex = regexp.MustCompile(`\\([^$"!])`)
 )
 
 func expandVariables(v string, m map[string]string) string {
