@@ -23,7 +23,7 @@ import (
 	"strings"
 )
 
-const doubleQuoteSpecialChars = "\\\n\r\"!$`"
+const doubleQuoteSpecialChars = "\\\n\r$`"
 
 // Parse reads an env file from io.Reader, returning a map of keys and values.
 func Parse(r io.Reader) (map[string]string, error) {

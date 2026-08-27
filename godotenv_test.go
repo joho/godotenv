@@ -225,7 +225,7 @@ func TestLoadQuotedEnv(t *testing.T) {
 		"OPTION_J": "line 1\nline 2",
 		"OPTION_K": "line one\nthis is \\'quoted\\'\none more line",
 		"OPTION_L": "line 1\nline 2",
-		"OPTION_M": "line one\nthis is \"quoted\"\none more line",
+		"OPTION_M": "line one\nthis is \\\"quoted\\\"\none more line",
 	}
 
 	loadEnvAndCompareValues(t, Load, envFileName, expectedValues, noopPresets)
@@ -366,7 +366,12 @@ func TestParsing(t *testing.T) {
 	parseAndCompare(t, "FOO='bar'", "FOO", "bar")
 
 	// parses escaped double quotes
-	parseAndCompare(t, `FOO="escaped\"bar"`, "FOO", `escaped"bar`)
+	parseAndCompare(t, `FOO="escaped\"bar"`, "FOO", `escaped\"bar`)
+
+	// Node dotenv compatibility cases from issue #241.
+	parseAndCompare(t, `FOO="test"test"`, "FOO", `test"test`)
+	parseAndCompare(t, `FOO="test\"test"`, "FOO", `test\"test`)
+	parseAndCompare(t, `FOO="test\!test"`, "FOO", `test\!test`)
 
 	// a trailing escaped backslash does not escape the closing quote
 	parseAndCompare(t, `FOO="bar\\"`, "FOO", `bar\`)
@@ -559,11 +564,11 @@ func TestWrite(t *testing.T) {
 	//values are always double-quoted
 	writeAndCompare(`key=value`, `key="value"`)
 	//double-quotes are escaped
-	writeAndCompare(`key=va"lu"e`, `key="va\"lu\"e"`)
+	writeAndCompare(`key=va"lu"e`, `key="va"lu"e"`)
 	//but single quotes are left alone
 	writeAndCompare(`key=va'lu'e`, `key="va'lu'e"`)
 	// newlines, backslashes, and some other special chars are escaped
-	writeAndCompare(`foo="\n\r\\r!"`, `foo="\n\r\\r\!"`)
+	writeAndCompare(`foo="\n\r\\r!"`, `foo="\n\r\\r!"`)
 	// lines should be sorted
 	writeAndCompare("foo=bar\nbaz=buzz", "baz=\"buzz\"\nfoo=\"bar\"")
 	// integers should not be quoted
