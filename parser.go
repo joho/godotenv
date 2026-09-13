@@ -182,9 +182,10 @@ func extractVarValue(src []byte, vars map[string]string) (value string, rest []b
 			continue
 		}
 
-		// trim quotes
-		trimFunc := isCharFunc(rune(quote))
-		value = string(bytes.TrimLeftFunc(bytes.TrimRightFunc(src[0:i], trimFunc), trimFunc))
+		// content between the opening quote and this unescaped closer.
+		// Do not TrimLeft/TrimRight quote runes: a trailing escaped quote
+		// (PASSWORD="abvd\"") is a value character, not a delimiter.
+		value = string(src[1:i])
 		if quote == prefixDoubleQuote {
 			// unescape newlines for double quote (this is compat feature)
 			// and expand environment variables
