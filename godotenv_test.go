@@ -368,6 +368,10 @@ func TestParsing(t *testing.T) {
 	// parses escaped double quotes
 	parseAndCompare(t, `FOO="escaped\"bar"`, "FOO", `escaped"bar`)
 
+	// a trailing escaped quote is part of the value (Write/Read round-trip)
+	parseAndCompare(t, `FOO="abvd\""`, "FOO", `abvd"`)
+	parseAndCompare(t, `FOO="\""`, "FOO", `"`)
+
 	// a trailing escaped backslash does not escape the closing quote
 	parseAndCompare(t, `FOO="bar\\"`, "FOO", `bar\`)
 
@@ -572,6 +576,21 @@ func TestWrite(t *testing.T) {
 	writeAndCompare(`key=+123`, `key="+123"`)
 	// leading zeros must be preserved (not collapsed to a smaller int)
 	writeAndCompare(`key=007`, `key=007`)
+	// trailing double-quote in the value survives Marshal then Unmarshal
+	{
+		envMap := map[string]string{"PASSWORD": `abvd"`}
+		rep, err := Marshal(envMap)
+		if err != nil {
+			t.Fatal(err)
+		}
+		got, err := Unmarshal(rep)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if got["PASSWORD"] != `abvd"` {
+			t.Errorf("PASSWORD roundtrip: wrote %q, got %q", rep, got["PASSWORD"])
+		}
+	}
 
 }
 
