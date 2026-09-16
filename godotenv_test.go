@@ -402,6 +402,10 @@ func TestParsing(t *testing.T) {
 	// expect(env('FOO.BAR=foobar')).to eql('FOO.BAR' => 'foobar')
 	parseAndCompare(t, "FOO.BAR=foobar", "FOO.BAR", "foobar")
 
+	// Windows env keys may contain parentheses (issue #250)
+	parseAndCompare(t, `CommonProgramFiles(x86)=C:\Program Files (x86)\Common Files`, "CommonProgramFiles(x86)", `C:\Program Files (x86)\Common Files`)
+	parseAndCompare(t, "ProgramFiles(x86)=C:\\Program Files (x86)", "ProgramFiles(x86)", `C:\Program Files (x86)`)
+
 	// it 'parses variables with several "=" in the value' do
 	// expect(env('FOO=foobar=')).to eql('FOO' => 'foobar=')
 	parseAndCompare(t, "FOO=foobar=", "FOO", "foobar=")
