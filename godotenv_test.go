@@ -725,3 +725,17 @@ func TestParserErrors(t *testing.T) {
 		})
 	}
 }
+
+func TestUnmarshalBytesUTF8BOM(t *testing.T) {
+	data := append([]byte{0xEF, 0xBB, 0xBF}, []byte("FOO=bar\nBAZ=qux\n")...)
+	env, err := UnmarshalBytes(data)
+	if err != nil {
+		t.Fatalf("UnmarshalBytes: %v", err)
+	}
+	if env["FOO"] != "bar" {
+		t.Fatalf("FOO=%q want bar; env=%v", env["FOO"], env)
+	}
+	if env["BAZ"] != "qux" {
+		t.Fatalf("BAZ=%q want qux", env["BAZ"])
+	}
+}
