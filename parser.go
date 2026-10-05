@@ -26,6 +26,9 @@ var (
 
 func parseBytes(src []byte, out map[string]string) error {
 	src = bytes.ReplaceAll(src, []byte("\r\n"), []byte("\n"))
+	// Strip a leading UTF-8 BOM so editors that save with one do not break
+	// the first variable name (e.g. "\ufeffFOO=bar").
+	src = bytes.TrimPrefix(src, []byte{0xEF, 0xBB, 0xBF})
 	cutset := src
 	for {
 		cutset = getStatementStart(cutset)
