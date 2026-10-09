@@ -195,8 +195,18 @@ func TestLoadHyphenEnv(t *testing.T) {
 	loadEnvAndCompareValues(t, Load, envFileName, expectedValues, noopPresets)
 }
 
+func TestLoadWindowsEnv(t *testing.T) {
+	envFileName := "fixtures/windows.env"
+	expectedValues := map[string]string{
+		"CommonProgramFiles(x86)": "C:\\Program Files (x86)\\Common Files",
+		"ProgramFiles(x86)":       "C:\\Program Files (x86)",
+	}
+
+	loadEnvAndCompareValues(t, Load, envFileName, expectedValues, noopPresets)
+}
+
 func TestKeyNameCharsetRejectsDisallowed(t *testing.T) {
-	// Locks in the variable-name charset to [A-Za-z0-9_.-]. If you widen
+	// Locks in the variable-name charset to [A-Za-z0-9_.-()]. If you widen
 	// this further, delete the relevant case here on purpose.
 	disallowed := []string{
 		"FOO+BAR=baz",
@@ -401,6 +411,10 @@ func TestParsing(t *testing.T) {
 	// it 'parses variables with "." in the name' do
 	// expect(env('FOO.BAR=foobar')).to eql('FOO.BAR' => 'foobar')
 	parseAndCompare(t, "FOO.BAR=foobar", "FOO.BAR", "foobar")
+
+	// it 'parses variables with parentheses in the name' do
+	parseAndCompare(t, "CommonProgramFiles(x86)=C:\\Program Files (x86)\\Common Files", "CommonProgramFiles(x86)", "C:\\Program Files (x86)\\Common Files")
+	parseAndCompare(t, "ProgramFiles(x86)=C:\\Program Files (x86)", "ProgramFiles(x86)", "C:\\Program Files (x86)")
 
 	// it 'parses variables with several "=" in the value' do
 	// expect(env('FOO=foobar=')).to eql('FOO' => 'foobar=')
@@ -725,3 +739,48 @@ func TestParserErrors(t *testing.T) {
 		})
 	}
 }
+
+func TestWindowsParenthesesKeys(t *testing.T) {
+	testEnv := `
+DP_WORK_DIR=C:\User
+TEST=${DB_WORK_DIR}\test
+CommonProgramFiles(x86)=C:\Program Files (x86)\Common Files
+ProgramFiles(x86)=C:\Program Files (x86)
+`
+	got, err := Unmarshal(testEnv)
+	if err != nil {
+		t.Fatalf("unexpected error unmarshaling windows env: %v", err)
+	}
+
+	expected := map[string]string{
+		"DP_WORK_DIR":             "C:\\User",
+		"TEST":                    "\\test",
+		"CommonProgramFiles(x86)": "C:\\Program Files (x86)\\Common Files",
+		"ProgramFiles(x86)":       "C:\\Program Files (x86)",
+	}
+
+	for k, want := range expected {
+		if got[k] != want {
+			t.Errorf("expected %s=%q, got %q", k, want, got[k])
+		}
+	}
+}
+
+func TestMarshalUnmarshalParenthesesKeys(t *testing.T) {
+	envMap := map[string]string{
+		"CommonProgramFiles(x86)": "C:\\Program Files (x86)\\Common Files",
+		"ProgramFiles(x86)":       "C:\\Program Files (x86)",
+	}
+	marshaled, err := Marshal(envMap)
+	if err != nil {
+		t.Fatalf("unexpected error marshaling: %v", err)
+	}
+	unmarshaled, err := Unmarshal(marshaled)
+	if err != nil {
+		t.Fatalf("unexpected error unmarshaling: %v", err)
+	}
+	if !reflect.DeepEqual(envMap, unmarshaled) {
+		t.Errorf("expected %v, got %v", envMap, unmarshaled)
+	}
+}
+

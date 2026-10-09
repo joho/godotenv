@@ -121,7 +121,7 @@ myEnv, err := godotenv.Unmarshal(content)
 
 ### Variable name compatibility
 
-Ruby's dotenv only allows `[A-Za-z0-9_.]` in key names, while Node's dotenv also permits `-`. godotenv has matched the Node charset since v1.4.0, so keys like `MY-VAR` parse cleanly here and in Node but will error under Ruby's dotenv.
+Ruby's dotenv only allows `[A-Za-z0-9_.]` in key names, while Node's dotenv also permits `-`. godotenv has matched the Node charset since v1.4.0, so keys like `MY-VAR` parse cleanly here and in Node but will error under Ruby's dotenv. godotenv permits `(` and `)` in keys to support Windows environment variable names like `CommonProgramFiles(x86)`.
 
 ### Precedence & Conventions
 
