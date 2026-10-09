@@ -367,9 +367,23 @@ func TestParsing(t *testing.T) {
 
 	// parses escaped double quotes
 	parseAndCompare(t, `FOO="escaped\"bar"`, "FOO", `escaped"bar`)
+	parseAndCompare(t, `PASSWORD="abvd\""`, "PASSWORD", `abvd"`)
+	parseAndCompare(t, `FOO="\""`, "FOO", `"`)
+	parseAndCompare(t, `FOO="\"\""`, "FOO", `""`)
+	parseAndCompare(t, `FOO="\"hello\""`, "FOO", `"hello"`)
+	parseAndCompare(t, `FOO="hello\""`, "FOO", `hello"`)
+	parseAndCompare(t, `FOO="\"hello"`, "FOO", `"hello`)
+	parseAndCompare(t, `FOO="a\"b\"c"`, "FOO", `a"b"c`)
+	parseAndCompare(t, `FOO="bar\\\""`, "FOO", `bar\"`)
+	parseAndCompare(t, `FOO="bar\\\\\""`, "FOO", `bar\\"`)
+	parseAndCompare(t, `FOO="\\\"bar\\\""`, "FOO", `\"bar\"`)
 
 	// a trailing escaped backslash does not escape the closing quote
 	parseAndCompare(t, `FOO="bar\\"`, "FOO", `bar\`)
+	parseAndCompare(t, `FOO="bar\\\\"`, "FOO", `bar\\`)
+
+	// parses single quoted values with escaped quotes at end
+	parseAndCompare(t, `FOO='abvd\''`, "FOO", `abvd\'`)
 
 	// parses single quotes inside double quotes
 	parseAndCompare(t, `FOO="'d'"`, "FOO", `'d'`)
@@ -560,6 +574,9 @@ func TestWrite(t *testing.T) {
 	writeAndCompare(`key=value`, `key="value"`)
 	//double-quotes are escaped
 	writeAndCompare(`key=va"lu"e`, `key="va\"lu\"e"`)
+	writeAndCompare(`key="abvd\""`, `key="abvd\""`)
+	writeAndCompare(`key="\""`, `key="\""`)
+	writeAndCompare(`key="\"\""`, `key="\"\""`)
 	//but single quotes are left alone
 	writeAndCompare(`key=va'lu'e`, `key="va'lu'e"`)
 	// newlines, backslashes, and some other special chars are escaped
@@ -714,6 +731,10 @@ func TestParserErrors(t *testing.T) {
 			input: "foo=\"bar",
 			err:   ErrUnterminatedQuote,
 		},
+		"UnterminatedEscapedQuote": {
+			input: `foo="bar\"`,
+			err:   ErrUnterminatedQuote,
+		},
 	}
 
 	for n, c := range cases {
@@ -723,5 +744,36 @@ func TestParserErrors(t *testing.T) {
 				t.Errorf("Input: %q Expected:\t %q\nGot:\t %q Val: %v", c.input, c.err, err, v)
 			}
 		})
+	}
+}
+
+func TestEscapedQuotesRoundtrip(t *testing.T) {
+	testCases := []string{
+		`abvd"`,
+		`"`,
+		`""`,
+		`"""`,
+		`"hello"`,
+		`hello"`,
+		`"hello`,
+		`a"b"c`,
+		`foo\`,
+		`foo\"`,
+		`foo\\"`,
+		`foo\\\"`,
+	}
+	for _, val := range testCases {
+		envMap := map[string]string{"TEST_KEY": val}
+		marshaled, err := Marshal(envMap)
+		if err != nil {
+			t.Fatalf("Marshal failed for %q: %v", val, err)
+		}
+		unmarshaled, err := Unmarshal(marshaled)
+		if err != nil {
+			t.Fatalf("Unmarshal failed for marshaled %q (orig %q): %v", marshaled, val, err)
+		}
+		if unmarshaled["TEST_KEY"] != val {
+			t.Errorf("Roundtrip mismatch: expected %q, got %q (marshaled: %s)", val, unmarshaled["TEST_KEY"], marshaled)
+		}
 	}
 }
