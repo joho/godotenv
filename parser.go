@@ -264,7 +264,7 @@ func isLineEnd(r rune) bool {
 
 var (
 	escapeRegex        = regexp.MustCompile(`\\.`)
-	expandVarRegex     = regexp.MustCompile(`(\\)?(\$)(\()?\{?([A-Z0-9_]+)?\}?`)
+	expandVarRegex     = regexp.MustCompile(`(\\)?(\$)(\()?\{?([a-zA-Z0-9_]+)?\}?`)
 	unescapeCharsRegex = regexp.MustCompile(`\\([^$])`)
 )
 
