@@ -262,6 +262,16 @@ func TestExpanding(t *testing.T) {
 			map[string]string{"FOO": "test", "BAR": "test"},
 		},
 		{
+			"expands lowercase variables",
+			"foo=test\nbar=$foo",
+			map[string]string{"foo": "test", "bar": "test"},
+		},
+		{
+			"expands mixed case variables wrapped in brackets",
+			"Mixed_Case=test\nbar=${Mixed_Case}bar",
+			map[string]string{"Mixed_Case": "test", "bar": "testbar"},
+		},
+		{
 			"parses variables wrapped in brackets",
 			"FOO=test\nBAR=${FOO}bar",
 			map[string]string{"FOO": "test", "BAR": "testbar"},
