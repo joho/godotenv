@@ -152,6 +152,28 @@ func TestOverloadDoesOverride(t *testing.T) {
 	loadEnvAndCompareValues(t, Overload, envFileName, expectedValues, presets)
 }
 
+func TestParseUnquotedCommentValue(t *testing.T) {
+	cases := map[string]map[string]string{
+		// A '#' at the start of an unquoted value is part of the value,
+		// the same way the shell parses FOO=#bar. It must not panic.
+		"FOO=#comment":          {"FOO": "#comment"},
+		"FOO=# comment":         {"FOO": "# comment"},
+		"FOO=a#b #comment":      {"FOO": "a#b"},
+		"FOO=bar # baz # other": {"FOO": "bar"},
+	}
+	for input, want := range cases {
+		got, err := Parse(strings.NewReader(input))
+		if err != nil {
+			t.Fatalf("Parse(%q) error: %v", input, err)
+		}
+		for k, v := range want {
+			if got[k] != v {
+				t.Errorf("Parse(%q)[%q] = %q, want %q", input, k, got[k], v)
+			}
+		}
+	}
+}
+
 func TestLoadPlainEnv(t *testing.T) {
 	envFileName := "fixtures/plain.env"
 	expectedValues := map[string]string{
