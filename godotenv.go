@@ -19,6 +19,7 @@ import (
 	"io"
 	"os"
 	"os/exec"
+	"runtime"
 	"sort"
 	"strings"
 )
@@ -47,6 +48,7 @@ func Parse(r io.Reader) (map[string]string, error) {
 //	godotenv.Load("fileone", "filetwo")
 //
 // It's important to note that it WILL NOT OVERRIDE an env variable that already exists - consider the .env file to set dev vars or sensible defaults.
+// On Windows, where environment variable names are case-insensitive, a .env key that only differs by case from an existing variable is also left alone.
 func Load(filenames ...string) (err error) {
 	filenames = filenamesOrDefault(filenames)
 
@@ -209,17 +211,28 @@ func loadFile(filename string, overload bool) error {
 	currentEnv := map[string]bool{}
 	rawEnv := os.Environ()
 	for _, rawEnvLine := range rawEnv {
-		key := strings.Split(rawEnvLine, "=")[0]
-		currentEnv[key] = true
+		key := strings.SplitN(rawEnvLine, "=", 2)[0]
+		currentEnv[canonicalizeEnvKey(key)] = true
 	}
 
 	for key, value := range envMap {
-		if !currentEnv[key] || overload {
+		if !currentEnv[canonicalizeEnvKey(key)] || overload {
 			_ = os.Setenv(key, value)
 		}
 	}
 
 	return nil
+}
+
+// canonicalizeEnvKey normalizes environment variable names the way the host
+// process environment does. Windows treats names as case-insensitive, so Load
+// must not treat "FOO" and "foo" as distinct when deciding whether to skip a
+// key that is already set.
+func canonicalizeEnvKey(key string) string {
+	if runtime.GOOS == "windows" {
+		return strings.ToLower(key)
+	}
+	return key
 }
 
 func readFile(filename string) (envMap map[string]string, err error) {
