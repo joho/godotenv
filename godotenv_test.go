@@ -5,7 +5,9 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"path/filepath"
 	"reflect"
+	"runtime"
 	"strings"
 	"testing"
 )
@@ -725,3 +727,52 @@ func TestParserErrors(t *testing.T) {
 		})
 	}
 }
+
+func TestCanonicalizeEnvKey(t *testing.T) {
+	got := canonicalizeEnvKey("CODEX_Issue_Case")
+	if runtime.GOOS == "windows" {
+		if got != "codex_issue_case" {
+			t.Fatalf("windows canonicalizeEnvKey = %q, want lowercase", got)
+		}
+		return
+	}
+	if got != "CODEX_Issue_Case" {
+		t.Fatalf("canonicalizeEnvKey = %q, want original casing off Windows", got)
+	}
+}
+
+func TestLoadPreservesExistingVariableWithDifferentCase(t *testing.T) {
+	// https://github.com/joho/godotenv/issues/295
+	if runtime.GOOS != "windows" {
+		t.Skip("Windows environment variables are case-insensitive")
+	}
+	t.Setenv("CODEX_ISSUE_CASE_PROBE", "original")
+	path := filepath.Join(t.TempDir(), ".env")
+	if err := os.WriteFile(path, []byte("codex_issue_case_probe=overwritten\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if err := Load(path); err != nil {
+		t.Fatal(err)
+	}
+	if got := os.Getenv("CODEX_ISSUE_CASE_PROBE"); got != "original" {
+		t.Fatalf("got %q, want original", got)
+	}
+}
+
+func TestOverloadStillOverridesVariableWithDifferentCase(t *testing.T) {
+	if runtime.GOOS != "windows" {
+		t.Skip("Windows environment variables are case-insensitive")
+	}
+	t.Setenv("CODEX_ISSUE_CASE_PROBE", "original")
+	path := filepath.Join(t.TempDir(), ".env")
+	if err := os.WriteFile(path, []byte("codex_issue_case_probe=overwritten\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if err := Overload(path); err != nil {
+		t.Fatal(err)
+	}
+	if got := os.Getenv("CODEX_ISSUE_CASE_PROBE"); got != "overwritten" {
+		t.Fatalf("got %q, want overwritten", got)
+	}
+}
+
