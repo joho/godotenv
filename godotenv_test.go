@@ -296,6 +296,46 @@ func TestExpanding(t *testing.T) {
 			"FOO=test\nBAR=\"foo\\${FOO} ${FOO}\"",
 			map[string]string{"FOO": "test", "BAR": "foo${FOO} test"},
 		},
+		{
+			"uses default for unset variable in braced default expansion",
+			`VAR="${VAR:-default}"`,
+			map[string]string{"VAR": "default"},
+		},
+		{
+			"uses default for empty variable in braced colon default expansion",
+			"VAR=\nBAR=\"${VAR:-default}\"",
+			map[string]string{"VAR": "", "BAR": "default"},
+		},
+		{
+			"keeps set variable in braced colon default expansion",
+			"VAR=set\nBAR=\"${VAR:-default}\"",
+			map[string]string{"VAR": "set", "BAR": "set"},
+		},
+		{
+			"uses default for unset variable in braced dash default expansion",
+			`BAR="${MISSING_GD_VAR-default}"`,
+			map[string]string{"BAR": "default"},
+		},
+		{
+			"keeps empty variable in braced dash default expansion",
+			"VAR=\nBAR=\"${VAR-default}\"",
+			map[string]string{"VAR": "", "BAR": ""},
+		},
+		{
+			"supports spaces in braced default value",
+			`BAR="${MISSING_GD_VAR:-hello world}"`,
+			map[string]string{"BAR": "hello world"},
+		},
+		{
+			"does not treat unbraced default syntax as expansion",
+			"FOO=test\nBAR=$FOO:-x",
+			map[string]string{"FOO": "test", "BAR": "test:-x"},
+		},
+		{
+			"does not expand escaped braced default expansion",
+			`FOO="foo\${BAR:-default}"`,
+			map[string]string{"FOO": "foo${BAR:-default}"},
+		},
 	}
 
 	for _, tt := range tests {

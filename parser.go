@@ -264,7 +264,7 @@ func isLineEnd(r rune) bool {
 
 var (
 	escapeRegex        = regexp.MustCompile(`\\.`)
-	expandVarRegex     = regexp.MustCompile(`(\\)?(\$)(\()?\{?([A-Z0-9_]+)?\}?`)
+	expandVarRegex     = regexp.MustCompile(`(\\)?\$\{([A-Z0-9_]+)(:?-([^{}]*))?\}|(\\)?(\$)(\()?\{?([A-Z0-9_]+)?\}?`)
 	unescapeCharsRegex = regexp.MustCompile(`\\([^$])`)
 )
 
@@ -275,16 +275,37 @@ func expandVariables(v string, m map[string]string) string {
 		if submatch == nil {
 			return s
 		}
-		if submatch[1] == "\\" || submatch[2] == "(" {
-			return submatch[0][1:]
-		} else if submatch[4] != "" {
-			if val, ok := m[submatch[4]]; ok {
+		if submatch[1] == "\\" || submatch[5] == "\\" {
+			return s[1:]
+		}
+		if submatch[2] != "" {
+			// Braced form: ${NAME}, ${NAME:-default} or ${NAME-default}.
+			// ${NAME:-default} uses the default when NAME is unset or
+			// empty; ${NAME-default} only when NAME is unset.
+			// submatch[3] holds the whole suffix (e.g. ":-default").
+			name, suffix, def := submatch[2], submatch[3], submatch[4]
+			val, ok := m[name]
+			if !ok {
+				val, ok = os.LookupEnv(name)
+			}
+			if len(suffix) > 0 && suffix[0] == ':' {
+				if !ok || val == "" {
+					return def
+				}
+			} else if len(suffix) > 0 {
+				if !ok {
+					return def
+				}
+			}
+			return val
+		} else if submatch[8] != "" {
+			if val, ok := m[submatch[8]]; ok {
 				return val
 			}
-			if val, ok := os.LookupEnv(submatch[4]); ok {
+			if val, ok := os.LookupEnv(submatch[8]); ok {
 				return val
 			}
-			return m[submatch[4]]
+			return m[submatch[8]]
 		}
 		return s
 	})
