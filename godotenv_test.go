@@ -105,6 +105,29 @@ func TestReadPlainEnv(t *testing.T) {
 	}
 }
 
+func TestReadDoesNotOverrideEarlierFiles(t *testing.T) {
+	dir := t.TempDir()
+	first := dir + "/first.env"
+	second := dir + "/second.env"
+	if err := os.WriteFile(first, []byte("OPTION_A=first\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(second, []byte("OPTION_A=second\nOPTION_B=second\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	envMap, err := Read(first, second)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if envMap["OPTION_A"] != "first" {
+		t.Errorf("Expected OPTION_A from the first file, got %q", envMap["OPTION_A"])
+	}
+	if envMap["OPTION_B"] != "second" {
+		t.Errorf("Expected OPTION_B from the second file, got %q", envMap["OPTION_B"])
+	}
+}
+
 func TestParse(t *testing.T) {
 	envMap, err := Parse(bytes.NewReader([]byte("ONE=1\nTWO='2'\nTHREE = \"3\"")))
 	expectedValues := map[string]string{
